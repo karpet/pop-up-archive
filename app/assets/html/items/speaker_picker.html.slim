@@ -1,0 +1,14 @@
+.popover style="min-width:150px"
+  .arrow
+  button type="button" class="close" ng-click="$hide()" aria-hidden="true"  &times;
+  h3 class="popover-title" Speaker
+  .popover-content
+    div.form-inline class="contributors" ng-hide="item.contributions.length < 1 || newContributor"
+      select.form-control ng-model="contributor" ng-options="contributor.person.name for contributor in item.contributions track by contributor.id" ng-change="updateSpeakerName(contributor, text.speakerId); $hide()"
+        option value="" select speaker
+      span or
+      button.btn.btn-default ng-click="newContributor = true" add new
+    form.form-inline name="addContributor" class="new-contributor" ng-show="item.contributions.length < 1 || newContributor"
+      input.form-control placeholder="name" ng-model="contributor.person.name" name="speakerName" required=""
+      select.form-control ng-init="contributor.role = item.standardRoles[0]" ng-model="contributor.role" ng-options="role as role for role in item.standardRoles"
+      button.btn.btn-default data-dismiss="modal" ng-disabled="!addContributor.speakerName.$valid" ng-click="addContribution(contributor, text.speakerId); $hide()" add

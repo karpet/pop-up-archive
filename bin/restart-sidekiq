@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+
+# pidfile should align with config/sidekiq.yml
+pidfile = 'tmp/pids/sidekiq.pid'
+pid = `cat #{pidfile}`
+puts "sidekiq pid==#{pid}"
+if pid
+  system("bin/sidekiqctl stop #{pidfile} 20")
+end
+
+system("bin/sidekiq-daemon")
+# give sidekiq a moment to create new pid file
+sleep 2
+pid = `cat #{pidfile}`
+puts "new pid==#{pid}"

@@ -1,0 +1,30 @@
+.page-nav.pull-right ng-class="{selection: selectedItems.length}"
+  button.btn.btn-default ng-click="sortType = 1" ng-hide="sortType"
+    i.fa.fa-folder-open  Sort by Collection
+  button.btn.btn-default ng-click="sortType = 0" ng-show="sortType"
+    i.fa.fa-calendar  Sort by Date
+  a.btn.btn-default href="/collections"
+    i.fa.fa-inbox  Manage Collections
+  a.btn.btn-default href="/imports/new"
+    i.fa.fa-th-list  Batch Upload
+  .selection-actions
+    small ng-pluralize="" count="selectedItems.length" when="{'0':'', 'one':'{{selectedItems[0].getTitle()}}', 'other': 'selecting {} items'}"
+    .buttons
+      button.btn.btn-default bs-modal="modal" data-template="#{asset_path 'collections/tags_form.html'}"
+        i.fa.fa-tags  Edit Tags
+      button.btn.btn-default ng-click="clearSelection()"
+        i.fa.fa-times-circle  Clear Selection
+      button.btn.btn-danger ng-click="deleteSelection()"
+        i.fa.fa-trash  Delete
+
+h3
+  a href="/collections" My Collections
+  |  &raquo; Batch Edit
+.items.fill
+  .collection ng-repeat="category in sortedItems()"
+    h4
+      | {{category.name}}
+    ul.inline.items
+      li ng-repeat="item in category.items" ng-click="toggleItemSelection(item)" ng-class="{selected: item.selected}" title="{{item.getTitle()}}"
+        .item-thumb ng-class="item.getThumbClass()"
+        | {{item.getTitle()}}

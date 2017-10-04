@@ -1,0 +1,33 @@
+ul.authn.navbar.nav.navbar-nav.search-left
+  li
+    form.navbar-form ng-controller="GlobalSearchCtrl" ng-submit="go()"
+      input.search-query.form-control style="width:150px" ng-model="query.string" placeholder='Search' type='search'
+  li
+    a ng-click="refNav()" href="/refer"
+      | referral program
+
+/  li
+/    button.btn ng-click="testAlert()" test alerts
+
+ul.nav.authn.pull-right.navbar-right.navbar-nav.navbar
+  / li
+  /   a.activity 
+  /     span#loading-gear.animated ng-show="loading()"
+  /       i.fa.fa-large.fa.fa-refresh.fa.fa-spin style="color: #aaa"
+  li =render('alerts')
+  li
+    a.first.border.main.split href="/collections"
+      #my_collections
+        i.fa.fa-folder-o
+        span.nav-label
+          |  my collections&nbsp;
+    a.split.menu bs-dropdown="myCollectionsMenu" placement="bottom"
+      #my_collections_menu
+        i.fa.fa-caret-down
+  li
+    a.user-icon.border bs-dropdown="userMenu" placement="bottom-right"
+      #user_name
+        i.fa.fa-user
+        span.nav-label
+          |  #{current_user.name.downcase.truncate(19)}&nbsp;
+        i.fa.fa-caret-down

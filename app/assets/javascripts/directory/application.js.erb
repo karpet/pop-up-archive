@@ -1,0 +1,672 @@
+// This is a manifest file that'll be compiled into application.js, which will include all the files
+// listed below.
+//
+// Any JavaScript/Coffee file within this directory, lib/assets/javascripts, vendor/assets/javascripts,
+// or vendor/assets/javascripts of plugins, if any, can be referenced here using a relative path.
+//
+// It's not advisable to add code directly here, but if you do, it'll appear at the bottom of the
+// the compiled file.
+//
+// WARNING: THE FIRST BLANK LINE MARKS THE END OF WHAT'S TO BE PROCESSED, ANY BLANK LINE SHOULD
+// GO AFTER THE REQUIRES BELOW.
+//
+//= require jquery
+//= require bootstrap.min.js
+//= require angular
+//= require angular-route
+//= require angular-sanitize
+//= require angular-cookies
+//= require angular-ui
+//= require angular-strap
+//= require angular-strap-tpl
+//= require angularjs/rails/resource
+//= require select2
+//= require mule-upload
+//= require angular-stripe
+//= require d3.v3.min.js
+//= require angular-socialshare
+//= require angularjs-viewhead
+//= require once
+//= require ng-model-options
+//= require_tree ../account
+//= require_tree ../admin
+//= require_tree ../analytics
+//= require_tree ../angular
+//= require_tree ../audio_files
+//= require_tree ../collections
+//= require_tree ../csv_imports
+//= require_tree ../dashboard
+//= require_tree ../entities
+//= require_tree ../files
+//= require_tree ../image_files
+//= require_tree ../items
+//= require_tree ../organizations
+//= require_tree ../people
+//= require_tree ../searches
+//= require_tree ../users
+//= require_tree ../faq
+//= require_tree ../usage
+
+if(window.location.hash=="#_=_"){window.location.hash = ""}
+
+;(function() {
+
+  function applicationConfig($httpProvider, $locationProvider, $routeProvider, AnalyticsProvider) {
+
+    // config ga
+    AnalyticsProvider.account = '<%= ENV["GOOGLE_ANALYTICS_KEY"]%>';
+
+    // Add our CSRF stuff to all our requests by default
+    var metaTags = document.getElementsByTagName('meta'), token = "";
+    angular.forEach(metaTags, function(element) {
+      element = angular.element(element);
+      if (element.attr('name') == 'csrf-token') {
+        token = element.attr('content');
+      }
+    });
+
+    $httpProvider.defaults.headers.common['X-CSRF-Token'] = token;
+
+    // Set up routing
+    $locationProvider.html5Mode(true);
+
+    $routeProvider
+    .when('/', {
+      templateUrl: "<%= asset_path 'dashboard/guest.html' %>",
+      controller: "DashboardCtrl",
+      title: "Make Sound Searchable"
+    })
+    .when('/about', {
+      templateUrl: "<%= asset_path 'dashboard/about.html' %>",
+      controller: "DashboardCtrl",
+      title: "About",
+      description: "You record, organize, and share stories — you don’t archive them. But memories fade, and audio \
+can get lost or degrade. When it’s easy to save and search sound, it’s easy to find the threads that create stories. \
+Sound collections of all sizes benefit from immediate searchability, marked by time-stamps so producers — and audiences — \
+can find and hear exactly what they're looking for."
+    })
+    .when('/pricing', {
+      templateUrl: "<%= asset_path 'account/sign_up.html' %>",
+      controller: 'SignUpCtrl',
+      title: "Sign Up for Pop Up Archive",
+      description: "Choose one of our monthly individual plans. If you have lots of audio, contact us to discuss enterprise services."
+    })
+    .when('/user_stories', {
+      templateUrl: "<%= asset_path 'dashboard/user_stories.html' %>",
+      controller: "DashboardCtrl",
+      title: "User Stories"
+    })
+    .when('/radiorace', {
+      templateUrl: "<%= asset_path 'account/plans_prx.html' %>",
+      controller: 'PRXSignUpCtrl',
+      title: "Sign Up &raquo; Radio Race Special Offer"
+    })
+    .when('/account', {
+      templateUrl: "<%= asset_path 'account/index.html' %>",
+      controller: "AccountCtrl",
+      loginRequired: true,
+      title: "Account"
+    })
+    .when('/account/plan', {
+      templateUrl: "<%= asset_path 'account/plans.html' %>",
+      controller: "AccountPlanCtrl",
+      title: "Account &raquo Plans",
+      loginRequired: true
+    })
+    .when('/account/plan/radiorace', {
+      templateUrl: "<%= asset_path 'account/plans_prx.html' %>",
+      controller: "PRXAccountPlanCtrl",
+      title: "Account &raquol Plans &raquo Radio Race Special Offer",
+      loginRequired: true
+    })
+    .when('/pricing/demo-discount', {
+      templateUrl: "<%= asset_path 'account/plans.html' %>",
+      controller: "AccountPlanCtrl",
+      title: "Account Plans with #DemoDiscount coupon offer",
+      loginRequired: true
+    })
+    .when('/pricing/pop-up-friend', {
+      templateUrl: "<%= asset_path 'account/plans.html' %>",
+      controller: "AccountPlanCtrl",
+      title: "Account Plans with #PopUpFriend coupon offer",
+      loginRequired: true
+    })
+    .when('/refer', {
+      templateUrl: "<%= asset_path 'account/referral.html' %>",
+      controller: "ReferralCtrl",
+      title: "Refer a Friend",
+      loginRequired: true
+    })
+    .when('/collections', {
+      templateUrl: "<%= asset_path 'collections/index.html' %>",
+      controller: "CollectionsCtrl",
+      loginRequired: true,
+      title: "My Collections"
+    })
+    .when('/collections/edit', {
+      templateUrl: "<%= asset_path 'collections/batch_edit.html' %>",
+      controller: "BatchEditCtrl",
+      loginRequired: true,
+      title: "My Collections &raquo; Batch Edit"
+    })
+    .when('/collections/public', {
+      templateUrl: "<%= asset_path 'collections/index.html' %>",
+      controller: "PublicCollectionsCtrl",
+      title: "Public Collections",
+      description: "A complete list of all the public collections in Pop Up Archive."
+    })
+    .when('/explore', {
+      templateUrl: "<%= asset_path 'search/explore.html' %>",
+      controller: "SearchResultsCtrl",
+      title: "Explore",
+      description: "Navigate Pop Up Archive's collection of public audio by subject."
+    })
+    .when('/faq', {
+      templateUrl: "<%= asset_path 'faq/index.html' %>",
+      controller: "FAQController",
+      title: "FAQ",
+      description: "Learn more about how to get the most out of Pop Up Archive."
+    })
+    .when('/collections/:collectionId', {
+      templateUrl: "<%= asset_path 'collections/show.html' %>",
+      controller: "CollectionCtrl",
+      title: "{{collection.title}}",
+      description: "{{collection.description}}",
+      reloadOnSearch: false
+    })
+    .when('/collections/:collectionId/items/:id', {
+      templateUrl: "<%= asset_path 'items/show.html' %>",
+      controller:  "ItemCtrl",
+      title: "{{collection.title}} &raquo; {{item.getTitle()}}",
+      description: "{{item.getDescription()}}"
+    })
+    .when('/contributors/:contributorName', {
+      templateUrl: "<%= asset_path 'search/index.html' %>",
+      controller: "SearchCtrl"
+    })
+    .when('/enterprise', {
+      templateUrl: "<%= asset_path 'dashboard/enterprise.html' %>",
+      controller: "DashboardCtrl",
+      title: "Enterprise Services",
+      description: "Make your organization's sound searchable, accessible, and reusable. Our tools are lightweight, \
+so they work for the everyman and some of the biggest media collections in the world. Our work began with extensive \
+user research with radio producers and distributors and institutional archives. Our current clients include major media \
+stations, universities, multimedia producers, and oral history archives large and small."
+    })
+    .when('/imports', {
+      templateUrl: "<%= asset_path 'imports/index.html' %>",
+      controller: "ImportsCtrl",
+      title: "My Imports"
+    })
+    .when('/imports/new', {
+      templateUrl: "<%= asset_path 'imports/new.html' %>",
+      controller: "ItemsCtrl",
+      title: "Start a CSV Import"
+    })
+    .when('/imports/:importId', {
+      templateUrl: "<%= asset_path 'imports/show.html' %>",
+      controller: "ImportCtrl"
+    })
+    .when('/organization', {
+      templateUrl: "<%= asset_path 'organizations/show.html' %>",
+      controller:  "OrganizationCtrl",
+      title: "Organization &raquo; {{organization.name}}"
+    })
+    .when('/search', {
+      templateUrl: "<%= asset_path 'search/results.html' %>",
+      controller: "SearchResultsCtrl",
+      reloadOnSearch: false,
+      title: "Search"
+    })
+    .when('/terms_of_use', {
+      templateUrl: "<%= asset_path 'dashboard/terms_of_use.html' %>",
+      title: "Terms of Use"
+    })
+    .when('/analytics', {
+      templateUrl: "<%= asset_path 'analytics/index.html' %>",
+      title: "Analytics"
+    })
+    .when('/developer', {
+      redirectTo: function() {window.location.replace("/developer")},
+      title: "Developer"
+    })
+    .when('/error/404', {
+      templateUrl: "<%= asset_path 'error/404.html' %>",
+      title: "Not Found"
+    })
+    .when('/error/403', {
+      templateUrl: "<%= asset_path 'error/403.html' %>",
+      title: "Permission Denied"
+    })
+    .when('/error/413', {
+      templateUrl: "<%= asset_path 'error/413.html' %>",
+      title: "Over Monthly Limit"
+    })
+    .when('/error/401', {
+      templateUrl: "<%= asset_path 'error/401.html' %>",
+      title: "Login Required"
+    })
+    .when('/error/500', {
+      templateUrl: "<%= asset_path 'error/500.html' %>",
+      title: "Server Error"
+    })
+    .otherwise({
+      template: "<h1>404 - not found</h1>"
+    });
+
+  }
+
+  applicationConfig.$inject = ["$httpProvider", "$locationProvider", "$routeProvider", "AnalyticsProvider"];
+
+  var depends =  ['rails',
+                  'ngCookies',
+                  'analytics',
+                  'ui',
+                  'mgcrea.ngStrap',
+                  //'$strap.directives',
+                  'RailsUjs',
+                  'Directory.dashboard.controllers',
+                  'Directory.files.controllers',
+                  'Directory.csvImport.controllers',
+                  'Directory.searches.controllers',
+                  'Directory.items.controllers',
+                  'Directory.audioFiles.controllers',
+                  'Directory.collections.controllers',
+                  'Directory.organizations.controllers',
+                  'Directory.account.controllers',
+                  'Directory.faq.controllers',
+                  'Directory.analytics.controllers',
+                  'viewhead',
+                  'once',
+                  'modelOptions'
+                  ];
+
+  window.directory = angular.module('Directory', depends);
+
+  window.directory.constant('STORAGE_PROVIDER', {
+    bucket: '<%= ENV["AWS_BUCKET"] %>',
+    access_key: '<%= ENV["AWS_ACCESS_KEY_ID"] %>'
+  });
+
+  // Adds Angular's anchorScroll functionality
+  window.directory.run(['$rootScope', '$location', '$anchorScroll', '$routeParams', function($rootScope, $location, $anchorScroll, $routeParams) {
+    $rootScope.$on('$routeChangeSuccess', function(newRoute, oldRoute) {
+      $location.hash($routeParams.scrollTo);
+      $anchorScroll();
+    });
+  }]);
+
+  window.directory.config(applicationConfig);
+  window.directory.controller("DirectoryCtrl", ['$scope', '$route', '$interpolate', 'Me', 'Alert', '$timeout', '$location', function($scope, $route, $interpolate, Me, Alert, $timeout, $location) {
+
+    $scope.$on( '$routeChangeSuccess', function ( event, current, previous ) {
+      if ( $location.path() == '/collections/edit' ) {
+        $scope.hideFooter = true;
+      } else {
+        $scope.hideFooter = false;
+      }
+    });
+
+    $timeout(function() { angular.element('.logo.up').addClass('raised-logo'); }, 1000);
+    $timeout(function() { angular.element('.logo-square .up').addClass('raised-logo-square'); }, 1000);
+
+    $scope.modalOpts = {
+      backdropFade: true,
+      dialogFade: true
+    };
+
+    $scope.messages = [];
+
+    $scope.addMessage = function(message) {
+      $scope.messages.push(message);
+    };
+
+    $scope.removeMessage = function(msgIdx) {
+      $scope.messages.splice(msgIdx, 1);
+    };
+
+    $scope.$on("alertEnded", function (e, alert) {
+      console.log('alertEnded!', alert);
+      if (alert.status == 'Analyzed') {
+        $scope.addMessage({
+          'type': 'success',
+          'title': 'Congratulations!',
+          'content': '<em>' + alert.message + '</em> has been analyzed! <a data-dismiss="alert" data-target=":parent" ng-href="' + alert.path + '">Complete your import.</a>'
+        });
+      }
+    });
+
+    // you can test alert CSS/layout like this:
+    // $s = angular.element('body').scope();
+    // $s.testAlert();
+    // ^^ use your js console to execute
+    $scope.testAlert = function() {
+      var alert = new Alert();
+      alert.status   = 'complete';
+      alert.category = 'test';
+      alert.message = 'this is a test';
+      alert.progress = 100;
+      alert.add();
+    }
+
+    $scope.userMenu = [];
+    $scope.myCollectionsMenu = [];
+
+    $scope.setUserMenus = function() {
+      Me.authenticated(function (user) {
+
+        var menu = [
+          {
+            text: 'analytics',
+            href: '/analytics'
+          },
+          {
+            text: 'account',
+            href: '/account'
+          },
+          // {
+          //   text: 'my uploads',
+          //   href: '/imports'
+          // },
+          {
+            text: 'log out',
+            href: '/users/sign_out',
+            target: '_self',
+            method: 'delete'
+          }
+        ];
+
+        if (user && user.organization) {
+          menu.unshift({text: user.organization.name, href: '/organization'});
+        }
+
+        $scope.userMenu = menu;
+
+        var collMenu = [];
+        angular.forEach(user.collections, function(coll_title, coll_id) {
+          collMenu.push({
+            text: coll_title, // TODO html escape
+            href: '/collections/'+coll_id,
+          });
+        });
+        $scope.myCollectionsMenu = collMenu;
+
+      });
+    };
+
+    $scope.setUserMenus();
+
+    $scope.itemHelp = {
+      'collection'      : { 'title': 'Collection',
+                            'content': '<p>A collection is a set of items. They can be public or private, and are a way to organize your uploads and data.</p><p>Examples</p><ul><li>Hidden Kitchens</li><li>My Project Audio</li></ul>'
+                          },
+      'item'            : { 'title': 'Item',
+                            'content': '<p>An Item is created every time you upload audio to store your file(s) along with its machine-generated transcript and tags. </p><p><a href="https://popuparchiveorg.zendesk.com/hc/en-us/articles/203618550">Learn more.</a></p>'
+                          },
+      'title'           : { 'title': 'Title',
+                            'content': '<p>The name that will appear when you search for the item. Not all audio will have a predefined title, e.g., interviews or segments of a longer work. In these situations, make up a title that you think will help you or others easily identify the audio\’s content.</p><p>Examples</p><ul><li>Willie Nelson Interview</li><li>War of the Worlds</li><li>NASA Apollo 11 Onboard Recordings</li></ul>'
+                          },
+      'image'           : { 'image': 'Image',
+                            'content': '<p>Select an image to display on this item page. All images resized to 75px by 75px. Accepted image formats include:</p><ul><li>JPG</li><li>PNG</li></ul>'
+                          },
+      'episodeTitle'    : { 'title': 'Episode Title',
+                            'content': '<p>A finished episode or piece to which the audio contributed. Not all of your audio contributes to a larger piece. In these cases, leave this field blank.</p><p>Examples</p><ul><li>Hidden Kitchens Texas</li><li>Notes on Camp</li><li>Parasites</li></ul>'
+                          },
+      'seriesTitle'     : { 'title': 'Series Title',
+                            'content': '<p>The larger series to which the episode or piece contributed. Not all of your audio contributes to a series. In these cases, leave this field blank.</p><p>Examples</p><ul><li>Hidden Kitchens</li><li>This American Life</li><li>Love and Radio</li></ul>'
+                          },
+      'identifier'      : { 'title': 'Item ID',
+                            'content': '<p>A set of letters or numbers that you use to identify the item. Your ID is like a library call number. You can use an ID for an organizational system that you’ve invented, or you can use a URL.</p><p>Examples</p><ul><li>PROG_SV2BT0GDPUE28XX</li><li>NOVA003406</li><li>http://archive.org/details/<br/>TheApollo11MoonLanding</li></ul>'
+                          },
+      'description'     : { 'title': 'Description',
+                            'content': '<p>An abstract or summary of the audio. Your description can be a paragraph (or several) or only a sentence or two.</p><p>Examples</p><ul><li>Willie Nelson takes us across The Lone Star State in this lively hour of stories from KUT Austin and NPR. Explore the history of Texas through food—told by people who find it, grow it, cook it, eat it, sell it, share it, and celebrate with it.</li></ul>'
+                          },
+      'rights'          : { 'title': 'Rights',
+                            'content': '<p>Information about rights to the media item. Typically, rights information includes a statement about various property rights associated with the audio, including intellectual property rights. For audio that you\’d like to see shared or remixed, we recommend using a <a href=”http://creativecommons.org/choose/” target=”blank”> Creative Commons license</a>.</p><p>Examples</p><ul><li>Creative Commons Attribution 3.0 Unported License</li><li>Copyright 2013 The Kitchen Sisters. Please contact kitchen@kitchensisters.org to get permission for use.</li></ul>'
+                           },
+      'dateCreated'     : { 'title': 'Date Created',
+                            'content': '<p>The original date that the media item was created. In the case of raw interviews, the date on which the interview was conducted. For a finished piece, this may be the date you completed your final edit.</p>'
+                          },
+      'dateBroadcast'   : { 'title': 'Date Broadcast',
+                            'content': '<p>The date on which the audio was originally broadcast either on the web or on air. (e.g., The date you first released the piece as a podcast or the date the piece ran on All Things Considered). If multiple broadcast dates are available, record the earliest date of broadcast.</p>'
+                            },
+      'physicalFormat'  : { 'title': 'Physical Format',
+                            'content': '<p>The format of a media item that occupies physical space (e.g., a tape on a shelf), rather than as a digital file residing on a server or hard drive. This field is useful for tracking items that have not yet been digitized and items that have been digitized but still have physical analogs.</p><p>Examples</p><ul><li>1 inch audio tape</li><li>1/2 inch digital audio tape</li></ul>'
+                           },
+      'physicalLocation': { 'title': 'Physical Location',
+                            'content': '<p>An address for a physical media item. This field may contain information about an item\’s location on a specific shelf, including an organization\'s name, departmental name, shelf ID and contact information. You can include any information that will help you find the media later.</p><p>Examples</p><ul><li>Vault: ML007859.121.1.</li><li>Bay 12, Shelf 21</li><li>Front closet at Mario Furloni\’s house, Oakland, CA</li></ul>'
+                          },
+      'digitalFormat'   : { 'title': 'Digital Format',
+                            'content': '<p>The audio file\’s digital format on a server or hard drive. Digital media formats are expressed as MIME types (e.g., mpeg). Pop Up Archive currently supports aac, aif, aiff, alac, flac, m4a, m4p, mp2, mp3, mp4, ogg, raw, spx, wav, and  wma.</p><p>Examples</p><ul><li>mpeg (MP2, MP3)</li><li>wav (WAV)</li><li>aiff (AIF, AIFF)</li><li>mp4 (MP4)</li><li>ogg (Ogg Vorbis, Flac)</li></ul>'
+                           },
+      'audioFiles'      : { 'title': 'Audio Files',
+                            'content': '<p>Digital media files to be uploaded from your computer. Upload multiple files at the same time <strong>only if the audio has multiple parts</strong> (e.g., an interview recorded over three separate tracks).</p>'
+                          },
+      'audioFiles[][remoteFileUrl]' : { 'title': 'Link(s) to Audio File',
+                            'content': '<p>A direct link to a digital media item on the web. Pop Up Archive will use this URL to upload your audio. Upload multiple files at the same time <strong>only if the audio has multiple parts</strong> (e.g., an interview recorded over three separate tracks).</p> The URL must end with a file extension like .mp2, .mp3, or .wav. A more general URL to a web page with information about the file can be listed in the Item ID field.</p><p>Examples</p><ul><li>http://archive.org/download/NasaApollo11OnboardRecordings/11_highlight_1.mp3</li><li>http://archive.org/download/NasaApollo11OnboardRecordings/11_highlight_2.mp3</li><li>http://archive.org/download/NasaApollo11OnboardRecordings/11_highlight_3.mp3</li></ul>'
+                          },
+      'digitalLocation' : { 'title': 'Link(s) to Audio File',
+                            'content': '<p>A direct link to a digital media item on the web. Pop Up Archive will use this URL to upload your audio. A single item may have multiple values if the audio has multiple parts (e.g., an interview recorded over three separate tracks). The URL must end with .mp2, .mp3, or .wav. A more general URL to a web page with information about the file can be listed in the Item ID field.</p><p>Examples</p><ul><li>http://archive.org/download/NasaApollo11OnboardRecordings/11_highlight_1.mp3</li><li>http://archive.org/download/NasaApollo11OnboardRecordings/11_highlight_2.mp3</li><li>http://archive.org/download/NasaApollo11OnboardRecordings/11_highlight_3.mp3</li></ul>'
+                          },
+      'musicSoundUsed'  : { 'title': 'Music',
+                            'content': '<p>Information about the music or sound clips used in a piece. This could include title, artist, album, timestamp, producer or record label information.</p><p>Examples</p><ul><li>"Dole It Out", Podington Bear</li><li>At Club St. Germain, Django Reinhardt</li><li>The Beatles, Apple</li></ul>'
+                          },
+      'datePeg'         : { 'title': 'Date Peg',
+                            'content': '<p>Commonly recognized point in time such as a holiday or political event.</p><p>Examples</p><ul><li>Christmas</li><li>Yom Kippur</li><li>Independence Day</li></ul>'
+                          },
+      'notes'           : { 'title': 'Notes',
+                            'content': 'Additional notes or information about the item.'
+                          },
+      'duration'        : { 'title': 'Duration',
+                            'content': '<p>A timestamp for the overall length of the audio. Represents the playback time.</p><p>Examples</p><ul><li>00:56:46</li><li>00:56:46.0006</li></ul>'
+                          },
+      'tags'            : { 'title': 'Tags',
+                            'content': '<p>A keyword or term that describes the item.</p><p>Examples</p><ul><li>space exploration</li><li>cosmology</li><li>physics</li></ul>'
+                          },
+      'transcription'   : { 'title': 'Transcription',
+                            'content': 'Text transcript of the speech in the audio.'
+                          },
+      'premiumTranscript' : { 'title': 'Pop Up Archive Transcript',
+                            'content': '<p>This is an automatically generated transcript created using software specially trained on oral history and broadcast audio.<p><a href="https://popuparchiveorg.zendesk.com/hc/en-us/articles/203618600-What-are-basic-and-premium-transcripts-">Learn more about our transcripts.</a></p>'
+                          },
+      'basicTranscript' : {'title': 'Basic Transcript',
+                            'content': '<p>This is a Basic quality machine transcript, created to let you instantly search this audio for keywords.</p>'+
+                            '<p><a href="https://popuparchiveorg.zendesk.com/hc/en-us/articles/203618600-What-are-basic-and-premium-transcripts-">Learn more about our transcripts.</a></p>'
+                          },
+      'geographicLocation' : { 'title': 'Geolocation',
+                            'content': '<p>A place that is the subject of a piece of media. This could be a city name, a state name, an address, or even latitude and longitude coordinates. Basically, you can enter anything you might enter into Google Maps to find a location.</p><p>Examples</p><ul><li>37.2000,-76.7667</li><li>1600 Pennsylvania Avenue NW, Washington, D.C.</li><li>Chicago, IL</li></ul>'
+                          },
+      'interviewers[]'  : { 'title': 'Interviewer',
+                            'content': '<p>The person(s) conducting the interview.</p><p>Examples</p><ul><li>Davia Nelson</li><li>Nicholas van der Kolk</li><li>Chana Joffe-Walt</li></ul>'
+                          },
+      'interviewees[]'  : { 'title': 'Interviewee',
+                            'content': '<p>The person(s) being interviewed.</p><p>Examples</p><ul><li>Willie Nelson</li><li>George Foreman</li><li>Senator Barney Frank</li></ul>'
+                          },
+      'producers[]'     : { 'title': 'Producer',
+                          'content': '<p>The person(s) who supervised or financed the work.</p><p>Examples</p><ul><li>Nancy Updike</li><li>Ellen Horne</li></ul>'
+                          },
+      'hosts[]'         : { 'title': 'Host',
+                            'content': '<p>The person(s) hosting the broadcast piece.</p><p>Examples</p><ul><li>Ira Glass</li><li>Robert Krulwich</li><li>Art Bell</li></ul>'
+                          },
+      'language'        : { 'title': 'Language',
+                            'content': '<p>The primary language spoken in the piece.</p>'
+                          },
+      'contributors'    : { 'title': 'Contributors',
+                            'content': '<p>The person(s) with various roles related to the item, such as producers, interviewees, etc.'
+                          },
+      'transcriptType'  : { 'title': 'Transcript Type',
+                            'content': '<p>Basic transcripts let you instantly search your audio for keywords, and serve as a starting point for editing. </p><p>For higher accuracy, punctuation, and editable speaker differentiation, try our new transcription software.</p><p><a href="https://popuparchiveorg.zendesk.com/hc/en-us/articles/203618600-What-are-basic-and-premium-transcripts-">Learn more about our transcripts.</a></p>'
+                          },
+      'audfile'         : {
+                            'content': '<p>This is the file name that your uploaded audio was saved with.</p>'
+                          },
+      'colitem'         : {
+                            'content': '<p>An Item is the page where we store your audio along with its transcript and tags. </p><p><a href="https://popuparchiveorg.zendesk.com/hc/en-us/articles/203618550">Learn more.</a></p>'
+                          },
+      'status'         : {
+                            'content': '<p>The processing status for your audio upload.</p><p><a href="https://popuparchiveorg.zendesk.com/hc/en-us/articles/203693330">See all possible statuses.</a></p>'
+                          },
+      'privacy'         : {
+                            'content': '<a href="https://popuparchiveorg.zendesk.com/hc/en-us/sections/200651254-Privacy-and-Audio-Storage">Find out who can see this collection.</a>'
+                          },
+      'simpleplayer'    : {
+                            'content': '<p>Paste this code into the body of your HTML for a Pop Up Archive branded audio player.</p>'
+                          },
+      'jstplayer'       : {
+                            'content': '<p>Paste this code into the body of your HTML for a Pop Up Archive audio player with an autoscrolling transcript, created with JavaScript. JS player text is unreliably indexed by search engines.</p>'
+                          },
+      'iframetplayer'   : {
+                            'content': '<p>Paste this code into the body of your HTML for a Pop Up Archive audio player with an autoscrolling transcript. Iframe player text is not indexed by search engines.</p>'
+                          },
+      'oembedtplayer'   : {
+                            'content': '<p>Paste this code into the body of your HTML for a Pop Up Archive audio player with an autoscrolling transcript. oEmbed players require some <a href=" https://github.com/popuparchive/Pop-Up-Archive-Wiki/wiki/Transcript-Player">server-side programming</a> to implement, but text is reliably indexed by search engines.</p>'
+                          },
+      'copyMedia'       : {
+                            'content': '<p>If your audio is already hosted on the internet and you only want to use the Pop Up Archive transcription and search features, you can choose not to store your audio with us.</p>'
+                          },
+      'importToPremiere': {
+                            'content': '<p>You can import the timed transcript text for this file into your current Adobe Premiere Pro project metadata. You can view the text in PPro by opening the "Metadata" panel and clicking on the "Speech Analysis" section.</p>'
+      }
+    };
+
+    $scope.upgradeOverLimit = function () {
+      mixpanel.track(
+        "Clicked Upgrade",{
+          "Source": "Over limit"
+        }
+      )
+    };
+    $scope.refNav = function () {
+      mixpanel.track(
+        "Clicked Referral",{
+          "Source": "In nav"
+        }
+      );
+    }
+
+    $scope.refPricing = function () {
+      mixpanel.track(
+        "Clicked Referral",{
+        "Source": "On Pricing"
+        }
+      );
+    }
+
+    $scope.$on('$routeChangeStart', function(event, next) {
+      if (typeof next !== 'undefined') {
+        if (next.$$route.loginRequired) {
+          Me.authenticated(undefined, function () {
+            window.location.replace("/users/sign_in");
+          });
+        }
+      }
+    });
+
+    $scope.$on('$routeChangeSuccess', function(event, next) {
+      $scope.currentRoute = next;
+    });
+
+    $scope.$watch('currentRoute.$$route.title', function (is, was) {
+      if (typeof is !== 'undefined') {
+        titleExpression = $interpolate(is);
+      } else {
+        titleExpression = function() {};
+      }
+    });
+
+    $scope.$watch('currentRoute.$$route.description', function (is, was) {
+      if (typeof is !== 'undefined') {
+        descriptionExpression = $interpolate(is);
+      } else {
+        descriptionExpression = function() {};
+      }
+    });
+
+    $scope.breadcrumbsTitle = function () {
+      if ($route.current) {
+        var datum = titleExpression($route.current.scope);
+        if (datum != '' && typeof datum != 'undefined') {
+          return "Pop Up Archive &raquo; " + datum;
+        }
+      }
+      return "Pop Up Archive";
+    };
+
+    $scope.metaDescription = function () {
+      if ($route.current) {
+        var datum = descriptionExpression($route.current.scope);
+        if (datum != '' && typeof datum != 'undefined') {
+          return datum;
+        }
+      }
+      return "Pop Up Archive's speech-to-text software automatically transforms audio into time-stamped transcripts you can search, edit, and export.";
+    };
+
+    $scope.iconForFile = function (file) {
+      var result = "icon-file-alt";
+
+      if (!file)
+        return result;
+
+      var name = "";
+      if (file.filename) {
+        name = file.filename;
+      } else if (file.name) {
+        name = file.name;
+      }
+
+      if ((file.type && file.type.match(/^audio/)) ||
+          (name.match(/\.(aac|aif|aiff|alac|flac|m4a|m4p|mp2|mp3|mp4|ogg|raw|spx|wav|wma)$/))) {
+        result = "icon-volume-up";
+      }
+
+      return result;
+    };
+
+    $scope.readableFileSize = function (size) {
+      var i = Math.floor( Math.log(size) / Math.log(1024) );
+      return ( size / Math.pow(1024, i) ).toFixed(1) * 1 + ' ' + ['B', 'KB', 'MB', 'GB', 'TB'][i];
+    };
+
+    // For OG tags
+    $scope.defaultShareImage = window.location.protocol+"//"+window.location.host+'<%= asset_path("pua-fb-1200x630.png") %>';
+    $scope.mainUrl = window.location.protocol+"//"+window.location.host;
+  }]);
+  // Directive for showing the loading mask on all except static pages
+  window.directory.directive('loadingMask', ['$location', function($location) {
+    return {
+      template: "<div class='loading-overlay' ng-show='loading()' ui-animate=''>" +
+                   "<div class='loading-indicator'>" +
+                     "<i class='fa fa-cog fa-spin'></i>" +
+                     "  Loading" +
+                   "</div>" +
+                "</div>",
+      link: function(scope, el, attrs) {
+        scope.$on('$routeChangeStart', function() {
+          if ($location.path() != '/' &&
+            $location.path() != '/enterprise' &&
+            $location.path() != '/team' &&
+            $location.path() != '/pricing' &&
+            $location.path() != '/terms_of_use' &&
+            $location.path() != '/faq' &&
+            $location.path() != '/about' &&
+            $location.path() != '/explore') {
+              el.css({display: 'block'});
+          } else {
+            el.css({display: 'none'});
+          }
+        });
+        scope.$on('HideMask', function() {
+          el.css({display: 'none'});
+        });
+        scope.$on('UnhideMask', function() {
+          el.css({display: 'block'});
+        });
+      }
+    }
+  }]);
+
+}());
+
+
+$(document).on("click", ".fa-search", function() {$(".navbar-form").slideToggle();});

@@ -1,0 +1,28 @@
+.speakers-form.modal role="dialog"
+  .modal-dialog
+    .modal-content
+      .modal-header
+        button type="button" class="close" aria-label="Close" ng-click="$hide()"
+          span aria-hidden="true" &times;
+        h3 ng-show="collection.id" Assign Speakers for {{item.title}}
+  
+      .modal-body
+        .alert.alert-info
+          p You can assign speakers based on who has contributed to your piece.
+          button.btn.btn-default bs-modal="modal" data-template="#{asset_path 'items/add_speakers_form.html'}"
+            i.fa.fa-user
+            |  Add Additional Speakers
+    
+    
+        form.form-horizontal
+          .form-group ng-repeat="speaker in audioFile.transcript.speakers"
+            label.control-label() {{speaker.name}}
+            
+            .controls
+              select ng-model="contributor.id" ng-options="contributor.person.name for contributor in item.contributions track by contributor.id" ng-change="assignSpeaker(contributor, speaker)"
+              // button.btn.btn-default type="button" ng-click="deleteSpeaker(speaker, audioFile)" Delete
+    
+    
+      .modal-footer
+        button.btn.btn-default type="button" ng-click="$hide()" Close 
+    

@@ -1,0 +1,50 @@
+- file_id    ||= @file_id
+- audio_file ||= @audio_file || AudioFile.find(file_id.to_i)
+- transcript ||= @transcript || @audio_file.best_transcript
+- chunk_size ||= @chunk_size || 5
+- short_url = ENV['SHORT_URL'] || root_url.gsub(/\/$/, '')
+- perm_url  = root_url.gsub(/\/$/, '')
+javascript:
+  window.shortURL = '#{ENV['SHORT_URL'] || perm_url}';
+
+.row-fluid
+  .col-xs-12
+    - if transcript
+      form.ts-search
+        .result-numbers
+        input type="text" placeholder="Find in transcript"
+        span.clear-find x
+        button.search-submit type="submit" disabled="true"
+          | find 
+          i.fa.fa-search
+        .last-result.inactive
+          i.fa.fa-chevron-circle-up
+        .next-result.inactive
+          i.fa.fa-chevron-circle-down
+      .tplayer.scrolling id="pua-tplayer-#{file_id}-transcript" data-file="#{file_id}" data-perm="#{audio_file.item_id.to_s(16)}"
+          .hidden.loading-indicator
+            .loading-text
+              i.fa.fa-cog.fa-spin
+              |  Seeking
+          .body
+            - tparts = transcript.has_speaker_ids ? transcript.chunked_by_speaker : transcript.chunked_by_time(chunk_size.to_i)
+            - line_num = 0; tparts.each do |tpart|
+
+              .row-fluid.timings-transcript
+                .col-xs-12.col-md-2.timings
+                  / = tpart[:speaker] + " "
+                  = tpart[:ts]
+                .col-xs-12.col-md-10.transcript
+                  - tpart[:text].each_with_index do |ttext,idx|
+                    .pua-tplayer-text id="pua-tplayer-text-#{file_id}-#{tpart[:offsets][idx].to_i}" data-idx="#{line_num += 1}" data-offset="#{tpart[:offsets][idx].to_i}"
+                      .tools
+                        span.ts
+                          = tpart[:offsets][idx].to_i.to_s
+                        i.share.fa.fa-twitter.fa-large data-toggle="modal" data-target="#share-modal-#{file_id}" data-offset="#{tpart[:offsets][idx].to_i.to_s}"
+                      .text
+                        = ttext
+    - else
+      |  Sadly, this audio has not yet been transcribed. Please try back later and/or let us know via 
+      a href="mailto:edison@popuparchive.com" 
+        | email
+      | . 

@@ -1,0 +1,36 @@
+.container.ng-cloak ng-hide="hideFooter"
+  .row-fluid
+    .col-md-12.navbar.navbar-nav.nav
+      ul.nav.navbar-nav
+        li
+          a data-toggle="modal" data-target="#contact-modal" style="cursor: pointer;" contact
+        li= link_to('pricing', '/pricing')
+        li= link_to('terms', '/terms_of_use')
+        li= link_to('faq', '/faq')
+        li= link_to('user stories', '/user_stories')
+        li=link_to('explore', '/explore')
+        li= link_to('devs', '/developer')
+
+  .row-fluid
+    .col-md-6
+      .site-info
+        ul
+          li
+            a href="http://www.knightfoundation.org" target="_blank"
+              img.image.sponsors src='#{asset_path("knight-foundationBW.png")}'
+          li
+            a href="http://www.neh.gov" target="_blank"
+              img.image.sponsors src='#{asset_path("neh_logo.jpg")}'
+
+    .col-md-6
+      .site-info.pull-right
+        h1.site-title
+          a ng-href='/' title="Pop Up Archive" rel="home"
+            .logo.pop Pop
+            .logo.up Up
+            .logo.archive &nbsp;Archive
+        p Pop Up Archive is optimized for Chrome.
+        ul
+          li.copyright ©#{© 2013}
+          li
+            a href="/" Pop Up Archive

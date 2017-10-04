@@ -1,0 +1,114 @@
+.row
+  .page-nav.pull-right
+    a.btn.btn-default ng-click="changedPlan()" href="/account/plan" 
+      i.fa.fa-wrench
+      |  Change Plan
+  h3
+    | Account
+
+.row ng-if="me.hasCard"
+  .well
+    .credit-card.pull-right ng-show="me.creditCard"
+      img ng-src="/assets/{{me.creditCard.type.toLowerCase()}}.png" ng-show="me.creditCard.type"
+      |  xxx-{{me.creditCard.last4}}
+      small
+        span ng-show="!me.plan.interim && me.plan.trial && me.plan.trial >= 0" trial, {{me.plan.trial}} days left
+        | {{me.creditCard.expMonth}}/{{me.creditCard.expYear}}&nbsp;
+        a ng-click="changeCreditCard()" (update)
+    .credit-card.pull-right ng-hide="me.creditCard"
+      p Free Trial
+      small
+        | ({{me.plan.trial}} days left)&nbsp;
+        a ng-click="changeCreditCard()" Add a Credit Card
+    .plan-pricing
+      | {{me.totalMeteredStorage | timeCode: 'words'}} - {{me.plan.amount / 100 | currency }}/{{me.plan.interval | shortInterval }}
+      small ng-hide="getsDiscount()"
+        a ng-click="changemyPlan()" href="/account/plan" Change My Plan.
+        |  Get 20% off by 
+        a ng-click="refPaid()" href="/refer" referring your friends!  
+      small ng-show="getsDiscount()"
+        | Congrats! We'll apply a 20% discount to your next month's bill.
+.row ng-hide="me.plan.amount"
+  .well
+    h6.pull-right
+      a ng-click="clickedFindOut()" href="/account/plan" Find out more &raquo;
+    h4
+      | Need more room?&nbsp;
+      a ng-click="clickedUpgrade()" href="/account/plan" Upgrade to a paid plan!
+      |  You can get 20% off by 
+      a ng-click="refDemo()" href="/refer" referring your friends!  
+.row
+  .well.usage
+    h4 My Account
+    hr/
+    dl.dl-horizontal
+      dt Name
+      dd() {{ me.name }}
+      dt Email Address
+      dd() {{ me.email }}
+      dt Current Plan
+      dd() {{ me.plan.name }}
+      dt ng-show="me.plan.trialEnd" Trial End
+      dd ng-show="me.plan.trialEnd" {{ me.plan.trialEnd }}
+
+.row
+  .well.usage
+    h4 Usage
+    .usage-organization ng-if="me.organization"
+      h5() {{me.organization.name}}, This Month ({{me.organization.usage.summary.thisMonth.period}})
+      dl.dl-horizontal
+        dt Usage
+        dd.usage-meter ng-class="{warning: me.orgUsageSecs() >= me.totalMeteredStorage, full: me.orgUsageSecs() >= me.totalMeteredStorage }"
+          .bar ng-style="{width: me.orgUsageSecs() / me.totalMeteredStorage * 100 + '%'}"
+          .meter-words() {{me.orgUsageSecs() | timeCode: 'words'}} / {{me.totalMeteredStorage | timeCode: 'words'}}
+        dt Total Plan Hours
+        dd.usage() {{me.orgUsageHours()}}
+    .usage-current ng-hide="me.plan.id === 'premium_community'"
+      h5 ng-show="me.organization" Me, This Month ({{me.usage.summary.thisMonth.period}})
+      h5 ng-hide="me.organization" This Month ({{me.usage.summary.thisMonth.period}})
+      dl.dl-horizontal
+        dt Estimated 
+        dd.usage-meter ng-class="{warning: me.usageSecs() >= me.totalMeteredStorage, full: me.usageSecs() >= me.totalMeteredStorage }"
+          .bar ng-style="{width: me.monthlyPaidUsageForSplitDisplay() / me.totalMeteredStorage * 100 + '%'}"
+          .meter-words() {{ me.monthlyPaidUsageForSplitDisplay() | timeCode: 'words'}} / {{me.totalMeteredStorage | timeCode: 'words'}}
+    .usage-com-plan  
+      dl.dl-horizontal  
+        dt ng-show="me.showDemoUsage()" 1-Hour Demo
+        dd ng-show="me.showDemoUsage()" {{me.communityPlanHoursUsed()}}
+    hr
+    .usage-history
+      h5 History
+      table.table.usage
+        tbody.usage-month-group data-period="{{mnthGrp.period}}" ng-repeat="mnthGrp in me.usageSummaryByMonth"
+          tr.usage-month.usage-month-header data-period="{{mnthGrp.period}}"
+            th.month colspan="4" {{mnthGrp.period}}
+            th.last
+              button.btn.btn-default ng-click="toggleDetails($event)"
+                i.fa.fa-expand-alt.fa.fa-large
+                |  Details
+          tr.usage-month.usage-activity ng-repeat="msum in mnthGrp.rows"
+            td() {{msum.type}}
+            td() {{msum.secs | timeCode: 'words'}} 
+            td colspan="3"
+          tr.usage-month.usage-charge.charge-pending ng-show="!mnthGrp.charges.length && $index == 0"
+            td colspan="5" Charges pending
+          tr.usage-month.usage-charge ng-repeat="charge in mnthGrp.charges"
+            td() {{charge.refType}}
+            td() {{charge.amount | currency:"USD $"}}
+            td() {{charge.transactionAt}}
+            td colspan="2"
+          tr.usage-month-details data-period="{{mnthGrp.period}}" ng-show="usageDetailsVisible(mnthGrp.period)"
+            th.first Date
+            th.second Item
+            th.time Duration
+            th.type Type
+            th User
+          tr.usage-month-details.info ng-repeat="t in me.usageDetailsByMonth(mnthGrp.period)" ng-show="usageDetailsVisible(mnthGrp.period)"
+            td.first() {{t.date | date:'yyyy-MM-dd HH:mm:ss'}}
+            td.second
+              a title="{{t.id}}" ng-show="!t.deleted" href="/collections/{{t.collId}}/items/{{t.itemId}}" {{t.title}}
+              span ng-show="t.deleted" title="this item was deleted {{t.id}}" {{t.title}}
+            td.time() {{t.time}}
+            td.type() {{t.flavor}}
+            td() {{t.user.name}}
+

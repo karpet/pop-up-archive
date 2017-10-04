@@ -1,0 +1,1377 @@
+{
+  "apiVersion": "1.0",
+  "swaggerVersion": "1.2",
+  "basePath": "XXX",
+  "resourcePath": "collections",
+  "apis": [
+    {
+      "path": "api/collections",
+      "operations": [
+        {
+          "method": "GET",
+          "summary": "GET authorized user's private COLLECTIONS",
+          "notes": "This endpoint will return a list of private collections associated with the authenticated user. The default number of collections returned is 3. Use pagination to retrieve more. For example, try appending '?page=2' to the request url. NOTE: Authentication is required for this endpoint.",
+          "nickname": "api_collections",
+          "consumes": [
+            "*/*"
+          ],
+          "produces": [
+            "application/JSON"
+          ],
+          "responseClass": "List[Collections]",
+          "authorizations": {
+            "oauth2": [
+              {
+                "scope": "get:collections",
+                "description": "GET private collections"
+              }
+            ]
+          },
+          "preliminaryCallbacks": [
+            null
+          ],
+          "responseMessages": [
+            {
+              "code": 200,
+              "message": "Success"
+            }
+          ]
+        },
+        {
+          "method": "POST",
+          "summary": "Create a new collection",
+          "nickname": "create_api_collections",
+          "notes": "This endpoint creates a new collection",
+          "produces": [
+            "application/JSON"
+          ],
+          "responseClass": "List[New Collection Response]",
+          "authorizations": {
+            "oauth2": [
+              {
+                "scope": "create:collection",
+                "description": "create a new collection"
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "name": "title",
+              "description": "title of the collection",
+              "required": true,
+              "type": "string",
+              "paramType": "header"
+            },
+            {
+              "name": "description",
+              "description": "description of the collection",
+              "required": false,
+              "type": "string",
+              "paramType": "header"
+            },
+            {
+              "name": "items_visible_by_default",
+              "description": "private or public collection",
+              "required": false,
+              "type": "boolean",
+              "paramType": "header"
+            },
+            {
+              "name": "storage",
+              "description": "storage location of the media associated with the collection",
+              "required": false,
+              "type": "string",
+              "paramType": "header"
+            }
+          ],
+          "responseMessages": [
+            {
+              "code": 200,
+              "message": "OK"
+            },
+            {
+              "code": "401",
+              "message": "Unauthorized"
+            },
+            {
+              "code": 422,
+              "message": "Unprocessable Entity"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "api/collections/public",
+      "operations": [
+        {
+          "summary": "GET public COLLECTION",
+          "notes": "This endpoint will return all Pop Up Archive public collections. The default number of collections returned is 3. Use pagination to retrieve more. For example, try appending '?page=2' to the request url.",
+          "nickname": "api_public_collections",
+          "method": "GET",
+          "responseClass": "List[Public Collections]",
+          "preliminaryCallbacks": [
+            null
+          ],
+          "requestSignature": "token"
+        }
+      ]
+    },
+    {
+      "path": "api/collections/{collection_id}",
+      "operations": [
+        {
+          "method": "GET",
+          "summary": "GET a COLLECTION by ID",
+          "notes": "This endpoint will return the medatdata for a single collection. NOTE: Authentication is required for private collections",
+          "nickname": "api_collection",
+          "authorizations": {
+            "oauth2": [
+              {
+                "NewKey": "get:collection",
+                "description": "GET single collection"
+              }
+            ]
+          },
+          "consumes": [
+            "*/*"
+          ],
+          "produces": [
+            "application/JSON"
+          ],
+          "responseClass": "List[Collections]",
+          "parameters": [
+            {
+              "paramType": "path",
+              "name": "collection_id",
+              "type": "integer",
+              "description": "Collection ID",
+              "required": true
+            }
+          ],
+          "responseMessages": [
+            {
+              "code": "200",
+              "message": "OK"
+            }
+          ]
+        },
+        {
+          "method": "DELETE",
+          "summary": "DELETE a COLLECTION by ID",
+          "notes": "This endpoint will delete a single collection",
+          "type": "void",
+          "nickname": "delete_api_collection",
+          "authorizations": {
+            "oauth2": [
+              {
+                "scope": "delete:collection",
+                "description": "DELETE single collection"
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "paramType": "path",
+              "name": "collection_id",
+              "description": "ID of the collection that is being deleted",
+              "type": "integer",
+              "required": true
+            }
+          ],
+          "responseMessages": [
+            {
+              "code": "204",
+              "message": "No Content"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "api/collections/{collection_id}/items/",
+      "operations": [
+        {
+          "method": "POST",
+          "summary": "CREATE a new ITEM within a given COLLECTION",
+          "notes": "This endpoint creates a new item within a given collection",
+          "type": "New Item",
+          "nickname": "create_api_collection_item",
+          "consumes": [
+
+          ],
+          "produces": [
+            "application/JSON"
+          ],
+          "authorizations": {
+            "oauth2": [
+              {
+                "scope": "String",
+                "description": "String"
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "paramType": "path",
+              "name": "collection_id",
+              "description": "ID of the collection that the item will be added to",
+              "type": "integer",
+              "required": true
+            },
+            {
+              "paramType": "header",
+              "name": "title",
+              "description": "title of the item being added to the collection",
+              "type": "string",
+              "required": "true"
+            },
+            {
+              "paramType": "header",
+              "name": "description",
+              "description": "description of the item being added to the collection",
+              "type": "string",
+              "required": "false"
+            },
+            {
+              "paramType": "header",
+              "name": "tags",
+              "description": "tags associated with the item",
+              "type": "array",
+              "required": "false"
+            }
+          ],
+          "responseClass": "List[New Item]",
+          "responseMessages": [
+            {
+              "code": "200",
+              "message": "OK"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "api/collections/{collection_id}/items/{item_id}",
+      "operations": [
+        {
+          "method": "GET",
+          "summary": "GET an ITEM by ID",
+          "notes": "This endpoint will return the metadata for an individual audio asset",
+          "nickname": "api_collection_item",
+          "produces": [
+            "application/JSON"
+          ],
+          "authorizations": {
+            "oauth2": [
+              {
+                "scope": "get:item",
+                "description": "GET a single ITEM from a COLLECTION"
+              }
+            ]
+          },
+          "responseClass": "List[Items]",
+          "parameters": [
+            {
+              "paramType": "path",
+              "name": "collection_id",
+              "type": "integer",
+              "description": "Collection ID",
+              "required": true
+            },
+            {
+              "paramType": "path",
+              "name": "item_id",
+              "type": "integer",
+              "description": "Item ID",
+              "required": true
+            }
+          ]
+        },
+        {
+          "method": "PUT",
+          "summary": "UPDATE (PUT) an ITEM by ID",
+          "notes": "This endpoint will update an item within a collection.",
+          "nickname": "update_api_collection_item",
+          "produces": [
+            "application/JSON"
+          ],
+          "authorizations": {
+            "oauth2": [
+              {
+                "scope": "put:item",
+                "description": "PUT (update) a single ITEM within a COLLECTION"
+              }
+            ]
+          },
+          "responseClass": "List[Item]",
+          "parameters": [
+            {
+              "paramType": "path",
+              "name": "collection_id",
+              "type": "integer",
+              "description": "Collection ID",
+              "required": true
+            },
+            {
+              "paramType": "path",
+              "name": "item_id",
+              "type": "integer",
+              "description": "Item ID",
+              "required": true
+            },
+            {
+              "paramType": "header",
+              "name": "id",
+              "type": "integer",
+              "description": "item_id",
+              "required": "true"
+            },
+            {
+              "paramType": "header",
+              "name": "title",
+              "type": "string",
+              "description": "title of the item",
+              "required": "true"
+            },
+            {
+              "paramType": "header",
+              "name": "description",
+              "type": "string",
+              "description": "description of the item",
+              "required": "true"
+            },
+            {
+              "paramType": "header",
+              "name": "date_created",
+              "type": "DateTime",
+              "description": "date the item was created",
+              "required": "true"
+            },
+            {
+              "paramType": "header",
+              "name": "identifier",
+              "type": "string",
+              "description": "unique identifier created by the user",
+              "required": "true"
+            },
+            {
+              "paramType": "header",
+              "name": "episode_title",
+              "type": "string",
+              "description": "title of the episode",
+              "required": "true"
+            },
+            {
+              "paramType": "header",
+              "name": "series_title",
+              "type": "string",
+              "description": "title of the series",
+              "required": "true"
+            },
+            {
+              "paramType": "header",
+              "name": "date_broadcast",
+              "type": "DateTime",
+              "description": "String",
+              "required": "true"
+            },
+            {
+              "paramType": "header",
+              "name": "physical_format",
+              "type": "string",
+              "description": "physical format of the original media",
+              "required": "true"
+            },
+            {
+              "paramType": "header",
+              "name": "digital_format",
+              "type": "string",
+              "description": "digital format of the original media",
+              "required": "true"
+            },
+            {
+              "paramType": "header",
+              "name": "digital_location",
+              "type": "string",
+              "description": "location where the digital media is stored",
+              "required": "true"
+            },
+            {
+              "paramType": "header",
+              "name": "physical_location",
+              "type": "string",
+              "description": "String",
+              "required": "true"
+            },
+            {
+              "paramType": "header",
+              "name": "music_sound_used",
+              "type": "string",
+              "description": "name of any music that was used",
+              "required": "true"
+            },
+            {
+              "paramType": "header",
+              "name": "date_peg",
+              "type": "string",
+              "description": "user generated date string",
+              "required": "true"
+            },
+            {
+              "paramType": "header",
+              "name": "rights",
+              "type": "string",
+              "description": "rights associated with the media",
+              "required": "true"
+            },
+            {
+              "paramType": "header",
+              "name": "tags",
+              "type": "array",
+              "description": "tags associated with the item",
+              "required": "true"
+            },
+            {
+              "paramType": "header",
+              "name": "notes",
+              "type": "string",
+              "description": "notes associated with the item",
+              "required": "true"
+            },
+            {
+              "paramType": "header",
+              "name": "language",
+              "type": "string",
+              "description": "language of the audio (en-US)",
+              "required": "true"
+            },
+            {
+              "paramType": "header",
+              "name": "adopt_to_collection",
+              "type": "integer",
+              "description": "if moving to a collection this is the new collection_id, otherwise is the existing collection_id",
+              "required": "true"
+            }
+          ]
+        },
+        {
+          "method": "DELETE",
+          "summary": "DELETE an ITEM by ID",
+          "notes": "This endpoint deletes a single item",
+          "type": "void",
+          "nickname": "delete_api_collection_item",
+          "authorizations": {
+            "oauth2": [
+              {
+                "scope": "item:delete",
+                "description": "DELETE an ITEM by ID"
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "paramType": "path",
+              "name": "collection_id",
+              "description": "ID of the COLLECTION that contains the ITEM",
+              "type": "integer",
+              "required": true
+            },
+            {
+              "paramType": "path",
+              "name": "item_id",
+              "description": "ID of the ITEM to DELETE",
+              "type": "integer",
+              "required": true
+            }
+          ],
+          "responseMessages": [
+            {
+              "code": "204",
+              "message": "No Content"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "api/collections/{collection_id}/people/{person_id}",
+      "operations": [
+        {
+          "summary": "Get single contributor",
+          "notes": "This endpoint will return the metadata for a single contributor",
+          "nickname": "api_collection_person",
+          "consumes": [
+
+          ],
+          "produces": [
+            "application/JSON"
+          ],
+          "authorizations": {
+            "oauth2": [
+              {
+                "scope": "String",
+                "description": "String"
+              }
+            ]
+          },
+          "method": "GET",
+          "responseClass": "List[Persons]",
+          "parameters": [
+            {
+              "paramType": "path",
+              "name": "collection_id",
+              "type": "integer",
+              "description": "Collection ID",
+              "required": true
+            },
+            {
+              "paramType": "path",
+              "name": "person_id",
+              "type": "integer",
+              "description": "Person ID",
+              "required": true
+            }
+          ]
+        },
+        {
+          "method": "DELETE",
+          "summary": "DELETE a PERSON by ID",
+          "notes": "This endpoint removes a person from a collection",
+          "type": "void",
+          "nickname": "delete_api_collection_person",
+          "authorizations": {
+            "oauth2": [
+              {
+                "scope": "persons:delete",
+                "description": "DELETE a PERSON by ID"
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "paramType": "path",
+              "name": "collection_id",
+              "description": "ID of the COLLECTION that contains the ITEM",
+              "type": "integer",
+              "required": true
+            },
+            {
+              "paramType": "path",
+              "name": "person_id",
+              "description": "ID of the PERSON to DELETE",
+              "type": "integer",
+              "required": true
+            }
+          ],
+          "responseMessages": [
+            {
+              "code": "204",
+              "message": "No Content"
+            },
+            {
+              "code": "404",
+              "message": "Not Found"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "models": {
+    "Collections": {
+      "id": "Collections",
+      "required": [
+        "id",
+        "title",
+        "items_visible_by_default",
+        "urls",
+        "storage"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "unique identifier for the collection"
+        },
+        "title": {
+          "type": "string",
+          "description": "title of the collection"
+        },
+        "description": {
+          "type": "string",
+          "description": "description of the collection"
+        },
+        "items_visible_by_default": {
+          "type": "boolean",
+          "description": "True == Public, False == Private"
+        },
+        "urls": {
+          "$ref": "URLs"
+        },
+        "storage": {
+          "type": "string",
+          "description": "location where the Collection items are stored",
+          "enum": [
+            "InternetArchive",
+            "AWS"
+          ]
+        }
+      }
+    },
+    "New Collection Request": {
+      "id": "New Collection Request",
+      "required": [
+        "title"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "title of the collection to be created"
+        },
+        "description": {
+          "type": "string",
+          "description": "description of the new collection"
+        },
+        "items_visible_by_default": {
+          "type": "boolean",
+          "description": "True == Public, False == Private"
+        },
+        "storage": {
+          "type": "string",
+          "description": "location where the Collection items are stored",
+          "enum": [
+            "InternetArchive",
+            "AWS"
+          ]
+        }
+      }
+    },
+    "New Collection Response": {
+      "id": "New Collection Response",
+      "required": [
+        "title"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "unique identifier for the collection"
+        },
+        "title": {
+          "type": "string",
+          "description": "title of the collection"
+        },
+        "description": {
+          "type": "string",
+          "description": "description of the collection"
+        },
+        "items_visible_by_default": {
+          "type": "boolean",
+          "description": "True == Public, False == Private"
+        },
+        "urls": {
+          "$ref": "URLs"
+        },
+        "storage": {
+          "type": "string",
+          "description": "location where the Collection items are stored",
+          "enum": [
+            "InternetArchive",
+            "AWS"
+          ]
+        },
+        "created": {
+          "type": "boolean",
+          "description": "returns true if collection was created"
+        }
+      }
+    },
+    "Public Collections": {
+      "id": "Public Collections",
+      "required": [
+        "copy_media",
+        "created_at",
+        "default_storage_id",
+        "id",
+        "items_visible_by_default",
+        "title",
+        "upload_storage_id"
+      ],
+      "properties": {
+        "copy_media": {
+          "type": "boolean",
+          "description": ""
+        },
+        "created_at": {
+          "type": "dateTime",
+          "description": "Date and time the collection was created"
+        },
+        "creator_id": {
+          "type": "integer",
+          "description": "Unique identifier for the creator of the collection"
+        },
+        "default_storage_id": {
+          "type": "integer",
+          "description": "Unique identifier for the deafult storage"
+        },
+        "deleted_at": {
+          "type": "dateTime",
+          "description": "Date and time the collection was deleted"
+        },
+        "description": {
+          "type": "string",
+          "description": "Collection description"
+        },
+        "id": {
+          "type": "integer",
+          "description": "Unique identifier for the Collection"
+        },
+        "items_visible_by_default": {
+          "type": "boolean",
+          "description": "True == Public, False == Private"
+        },
+        "title": {
+          "type": "string",
+          "description": "Collection title"
+        },
+        "updated_at": {
+          "type": "dateTime",
+          "description": "Date and time the Collection was last updated"
+        },
+        "upload_storage_id": {
+          "type": "integer",
+          "description": "Unique identifier for the upload storage location"
+        }
+      }
+    },
+    "Persons": {
+      "description": "Metadata for an individual associated with the item",
+      "id": "Persons",
+      "required": [
+        "id",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "Contributor's unique identifier"
+        },
+        "name": {
+          "type": "string",
+          "description": "Contributor's name"
+        }
+      }
+    },
+    "Contributions": {
+      "id": "Contributions",
+      "required": [
+        "id",
+        "role",
+        "person"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "Contribution's unique identifier"
+        },
+        "role": {
+          "type": "string",
+          "description": "Role this person had in creating the item (interviewer, interviewee, producer, etc)"
+        },
+        "person": {
+          "description": "One or more people associated with the item (See Persons Object for more details)",
+          "$ref": "Persons"
+        }
+      }
+    },
+    "Items": {
+      "id": "Items",
+      "required": [
+        "id",
+        "title",
+        "date_created",
+        "collection_id",
+        "collection_title",
+        "token",
+        "updated_at",
+        "date_added",
+        "storage",
+        "urls"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "The item's unique identifier"
+        },
+        "title": {
+          "type": "string",
+          "description": "The item's title"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the item"
+        },
+        "date_created": {
+          "type": "date",
+          "description": "The date that the original item was created as an audio asset"
+        },
+        "identifier": {
+          "type": "integer",
+          "description": "Unique identifier for the audio file"
+        },
+        "collection_id": {
+          "type": "integer",
+          "description": "Unique identifier of the parent collection"
+        },
+        "collection_title": {
+          "type": "string",
+          "description": "Title of the parent collection"
+        },
+        "episode_title": {
+          "type": "string",
+          "description": "Episode title"
+        },
+        "series_title": {
+          "type": "string",
+          "description": "Series title"
+        },
+        "date_broadcast": {
+          "type": "date",
+          "description": "The date that the original item was broadcast"
+        },
+        "physical_format": {
+          "type": "string",
+          "description": "Physical format of the item (e.g. tape)"
+        },
+        "digital_format": {
+          "type": "string",
+          "description": "Digital format of the item (e.g. 'wav','mp3')"
+        },
+        "digital_location": {
+          "type": "string",
+          "description": "Location of the original digital file"
+        },
+        "physical_location": {
+          "type": "string",
+          "description": "Physical location of the physical media"
+        },
+        "music_sound_used": {
+          "type": "string",
+          "description": "Title of any music used within the audio"
+        },
+        "date_peg": {
+          "type": "string",
+          "description": "Commonly recognized point in time such as a holiday or political event"
+        },
+        "rights": {
+          "type": "string",
+          "description": "The applicable digital rights for the item"
+        },
+        "duration": {
+          "type": "integer",
+          "description": "Duration of the audio item"
+        },
+        "tags": {
+          "items": {
+            "type": "string",
+            "description": "individual tag"
+          },
+          "type": "array",
+          "description": "Array of tags associated with an audio item"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Notes associated with the audio asset"
+        },
+        "token": {
+          "type": "string",
+          "description": "Internal identifier ({ITEM_TITLE}.HASH.{SITENAME})"
+        },
+        "language": {
+          "type": "string",
+          "description": "Primary language of the audio asset"
+        },
+        "updated_at": {
+          "type": "dateTime",
+          "description": "Date and time that the item was last updated"
+        },
+        "producers": {
+          "items": {
+            "type": "string",
+            "description": "Single producer"
+          },
+          "type": "array\n",
+          "description": "Array of producers"
+        },
+        "interviewers": {
+          "items": {
+            "type": "string",
+            "description": "Single interviewer"
+          },
+          "type": "array",
+          "description": "Array of interviewers"
+        },
+        "interviewees": {
+          "items": {
+            "type": "string",
+            "description": "Single interviewee"
+          },
+          "type": "array",
+          "description": "Array of interviewees"
+        },
+        "creators": {
+          "items": {
+            "type": "string",
+            "description": "Single creator"
+          },
+          "type": "array",
+          "description": "Array of creators"
+        },
+        "hosts": {
+          "items": {
+            "type": "string",
+            "description": "Single host"
+          },
+          "type": "array",
+          "description": "Array of hosts"
+        },
+        "guests": {
+          "items": {
+            "type": "string",
+            "description": "Single guest"
+          },
+          "type": "array",
+          "description": "Array of guests"
+        },
+        "date_added": {
+          "type": "dateTime",
+          "description": "Date that the item was added to Pop Up Archive"
+        },
+        "storage": {
+          "type": "string",
+          "description": "Storage location (e.g. InternetArchive, AWS)"
+        },
+        "extra": {
+          "type": "object",
+          "description": "User entered fields created during CSV import",
+          "properties": {
+            "digital_location": {
+              "type": "string",
+              "description": "Individual item"
+            }
+          }
+        },
+        "urls": {
+          "$ref": "URLs",
+          "description": "see URLs object for more details"
+        },
+        "highlights": {
+          "$ref": "Highlights"
+        },
+        "audio_files": {
+          "$ref": "Audio Files"
+        },
+        "entities": {
+          "$ref": "Entities"
+        },
+        "contributions": {
+          "$ref": "Contributions"
+        }
+      }
+    },
+    "New Item": {
+      "id": "New Item",
+      "required": [
+        "id",
+        "title",
+        "date_created",
+        "collection_id",
+        "collection_title",
+        "token",
+        "updated_at",
+        "date_added",
+        "storage",
+        "urls"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "The item's unique identifier"
+        },
+        "title": {
+          "type": "string",
+          "description": "The item's title"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the item"
+        },
+        "date_created": {
+          "type": "date",
+          "description": "The date that the original item was created as an audio asset"
+        },
+        "identifier": {
+          "type": "integer",
+          "description": "Unique identifier for the audio file"
+        },
+        "collection_id": {
+          "type": "integer",
+          "description": "Unique identifier of the parent collection"
+        },
+        "collection_title": {
+          "type": "string",
+          "description": "Title of the parent collection"
+        },
+        "episode_title": {
+          "type": "string",
+          "description": "Episode title"
+        },
+        "series_title": {
+          "type": "string",
+          "description": "Series title"
+        },
+        "date_broadcast": {
+          "type": "date",
+          "description": "The date that the original item was broadcast"
+        },
+        "physical_format": {
+          "type": "string",
+          "description": "Physical format of the item (e.g. tape)"
+        },
+        "digital_format": {
+          "type": "string",
+          "description": "Digital format of the item (e.g. 'wav','mp3')"
+        },
+        "digital_location": {
+          "type": "string",
+          "description": "Location of the original digital file"
+        },
+        "physical_location": {
+          "type": "string",
+          "description": "Physical location of the physical media"
+        },
+        "music_sound_used": {
+          "type": "string",
+          "description": "Title of any music used within the audio"
+        },
+        "date_peg": {
+          "type": "string",
+          "description": "Commonly recognized point in time such as a holiday or political event"
+        },
+        "rights": {
+          "type": "string",
+          "description": "The applicable digital rights for the item"
+        },
+        "duration": {
+          "type": "integer",
+          "description": "Duration of the audio item"
+        },
+        "tags": {
+          "items": {
+            "type": "string",
+            "description": "individual tag"
+          },
+          "type": "array",
+          "description": "Array of tags associated with an audio item"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Notes associated with the audio asset"
+        },
+        "token": {
+          "type": "string",
+          "description": "Internal identifier ({ITEM_TITLE}.HASH.{SITENAME})"
+        },
+        "language": {
+          "type": "string",
+          "description": "Primary language of the audio asset"
+        },
+        "updated_at": {
+          "type": "dateTime",
+          "description": "Date and time that the item was last updated"
+        },
+        "producers": {
+          "items": {
+            "type": "string",
+            "description": "Single producer"
+          },
+          "type": "array\n",
+          "description": "Array of producers"
+        },
+        "interviewers": {
+          "items": {
+            "type": "string",
+            "description": "Single interviewer"
+          },
+          "type": "array",
+          "description": "Array of interviewers"
+        },
+        "interviewees": {
+          "items": {
+            "type": "string",
+            "description": "Single interviewee"
+          },
+          "type": "array",
+          "description": "Array of interviewees"
+        },
+        "creators": {
+          "items": {
+            "type": "string",
+            "description": "Single creator"
+          },
+          "type": "array",
+          "description": "Array of creators"
+        },
+        "hosts": {
+          "items": {
+            "type": "string",
+            "description": "Single host"
+          },
+          "type": "array",
+          "description": "Array of hosts"
+        },
+        "guests": {
+          "items": {
+            "type": "string",
+            "description": "Single guest"
+          },
+          "type": "array",
+          "description": "Array of guests"
+        },
+        "date_added": {
+          "type": "dateTime",
+          "description": "Date that the item was added to Pop Up Archive"
+        },
+        "storage": {
+          "type": "string",
+          "description": "Storage location (e.g. InternetArchive, AWS)"
+        },
+        "extra": {
+          "type": "object",
+          "description": "User entered fields created during CSV import",
+          "properties": {
+            "digital_location": {
+              "type": "string",
+              "description": "Individual item"
+            }
+          }
+        },
+        "urls": {
+          "$ref": "URLs",
+          "description": "see URLs object for more details"
+        },
+        "highlights": {
+          "$ref": "Highlights"
+        },
+        "audio_files": {
+          "$ref": "Audio Files"
+        },
+        "images_files": {
+
+        },
+        "entities": {
+          "$ref": "Entities"
+        },
+        "contributions": {
+          "$ref": "Contributions"
+        },
+        "created": {
+          "type": "boolean",
+          "description": "notification that the item was created"
+        }
+      }
+    },
+    "URLs": {
+      "id": "URLs",
+      "required": [
+        "self"
+      ],
+      "properties": {
+        "self": {
+          "type": "string",
+          "description": "endpoint path"
+        }
+      }
+    },
+    "Audio Files": {
+      "id": "Audio Files",
+      "description": "Metadata for the item's associated audio file(s)",
+      "required": [
+        "id",
+        "filename",
+        "url"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "Unique identifier of the audio file"
+        },
+        "filename": {
+          "type": "string",
+          "description": "Audio filename"
+        },
+        "transcode_at": {
+          "type": "string",
+          "format": "dateTime",
+          "description": "Date and time that the audio was transcoded"
+        },
+        "duration": {
+          "type": "integer",
+          "description": "length, in seconds, of the audio file"
+        },
+        "url": {
+          "items": {
+            "type": "string",
+            "description": "single file URL"
+          },
+          "type": "array",
+          "description": "Absolute URLs to the associated audio files"
+        },
+        "transcript": {
+          "$ref": "Transcript",
+          "description": "see Transcript object for more details"
+        },
+        "tasks": {
+          "$ref": "Tasks",
+          "description": "see Tasks object for more details"
+        }
+      }
+    },
+    "Transcript": {
+      "id": "Transcript",
+      "description": "Transcript parts extracted from the audio file",
+      "required": [
+        "id",
+        "start_time",
+        "text",
+        "end_time"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "Unique identifier for the audio file transcript"
+        },
+        "start_time": {
+          "type": "integer",
+          "description": "time, in seconds, where this text is said"
+        },
+        "text": {
+          "type": "string",
+          "description": "transcript text that occurs between the given start_time and end_time"
+        },
+        "end_time": {
+          "type": "integer",
+          "description": "time, in seconds, where the text ends"
+        }
+      }
+    },
+    "Tasks": {
+      "id": "Tasks",
+      "description": "Tasks associated with the audio file",
+      "required": [
+        "id",
+        "status",
+        "name",
+        "type"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "Unique identifier of the task"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the task"
+        },
+        "status": {
+          "type": "string",
+          "description": "Status of the task (e.g. created, working, complete, etc)"
+        },
+        "type": {
+          "type": "string",
+          "description": "type of task (e.g. upload, copy, transcribe, analyze, analyze_audio, etc)"
+        },
+        "transcript_url": {
+          "type": "string",
+          "description": "Amara transcript URL"
+        },
+        "edit_transcript_url": {
+          "type": "string",
+          "description": "Amara edit transcript URL"
+        }
+      }
+    },
+    "Entities": {
+      "id": "Entities",
+      "description": "Automatically generated tags",
+      "required": [
+        "id",
+        "name",
+        "is_confirmed",
+        "category",
+        "score"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "Unique entity identifier"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the entity"
+        },
+        "is_confirmed": {
+          "type": "boolean",
+          "description": "True == a human has confirmed that this entity applies to the item; False  == the entity has not been confirmed"
+        },
+        "identifier": {
+          "type": "string",
+          "description": "Identifier can indicate what generated the entitiy (e.g. OpenCalais)"
+        },
+        "score": {
+          "type": "integer",
+          "description": "calculated strength of the relationship between the entity and the item"
+        },
+        "type": {
+          "type": "string",
+          "description": "Type of entity (e.g. Person, Organization, Location, etc)"
+        },
+        "category": {
+          "type": "string",
+          "description": "Entity category (e.g. topic, tag, entity, etc)"
+        },
+        "extra": {
+          "type": "multiple",
+          "description": "The extra object provides additional details related to a particular entity such as the original name or OpenCalais parameters"
+        }
+      }
+    },
+    "Highlights": {
+      "id": "Highlights",
+      "description": "Related audio files",
+      "required": [
+        "id",
+        "url",
+        "filename",
+        "transcript"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "Unique identifier of the highlighted audio file"
+        },
+        "url": {
+          "type": "string",
+          "description": "URL of the highlighted audio file"
+        },
+        "filename": {
+          "type": "string",
+          "description": "Filename of the highlighted audio file"
+        },
+        "transcript": {
+          "description": "Transcript of the highlighted audio file",
+          "$ref": "Transcript"
+        }
+      }
+    }
+  }
+}

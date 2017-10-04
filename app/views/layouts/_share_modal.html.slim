@@ -1,0 +1,28 @@
+- file_id    ||= @file_id
+- modal_id = 'share-modal-'+file_id
+.modal.fade id="#{modal_id}" aria-hidden="true" aria-labelledby="shareModal" role="dialog" tabindex="-1" 
+  .modal-dialog
+    .modal-content
+      .modal-header
+        button.close aria-label="Close" data-dismiss="modal" type="button" 
+          span aria-hidden="true"  &times;
+        h3.modal-title Edit and share this snippet
+      .modal-body
+        p
+          div.pull-right
+            | Characters:&nbsp
+            span.chars
+          label for="share-text" Text:
+          textarea.share-text name="share-text" rows="4" style="width: 100%"
+        p
+          span Share Link:&nbsp
+          span.share-link
+          br
+          //input checked="" type="checkbox" name="timestamp"
+          //label for="timestamp"
+
+      .modal-footer
+        a.share-button.btn.btn-primary target="_blank" 
+          i.fa.fa-twitter &nbsp
+          | Tweet
+        button.btn.btn-default data-dismiss="modal" type="button"  Close

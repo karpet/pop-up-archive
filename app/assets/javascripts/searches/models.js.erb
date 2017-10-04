@@ -1,0 +1,281 @@
+angular.module('Directory.searches.models', ['RailsModel', 'Directory.items.models'])
+.factory('Search', ['Model', 'Item', 'Facet',  function (Model, Item, Facet) {
+  var Search = Model({url:'/api/search', name: 'search'});
+
+  Search.prototype.lastItemNumber = function () {
+    return Math.min(this.page * <%= Item::SEARCH_RESULTS_PER_PAGE %>, this.totalHits);
+  }
+
+  Search.prototype.firstItemNumber = function () {
+    return Math.min((this.page-1)* <%= Item::SEARCH_RESULTS_PER_PAGE %> + 1, this.totalHits);
+  }
+
+  Search.prototype.hasMoreResults = function () {
+    return (this.lastItemNumber() < this.totalHits);
+  }
+
+  Search.prototype.facetsAsObjects = function (visibility) {
+    visibility = visibility || false;
+    if (typeof this._facetObjects !== 'undefined') {
+      return this._facetObjects;
+    }
+    this._facetObjects = [];
+    angular.forEach(this.facets, function (facet, name) {
+
+      if (facet && facet['buckets'] && facet['buckets'].length>0) {
+        this.push(new Facet(name, facet));
+      }
+    }, this._facetObjects);
+    return this._facetObjects;
+  }
+
+  Search.prototype.aFacetIsVisible = function () {
+    var aFacetIsVisible = false;
+    angular.forEach(this.facetsAsObjects(), function (facet) {
+      if (facet.visible())
+        aFacetIsVisible = true;
+    });
+    return aFacetIsVisible;
+  }
+
+  Search.prototype.getFacet = function (name) {
+    return this.facetsAsObjects().filter(function (facet) {
+      return facet.name === name;
+    })[0];
+  }
+
+  return Search;
+}])
+.factory('Facet', ['Collection', function (Collection) {
+  function FacetEntry(name, count, field) {
+    this.name = name;
+    this.count = count;
+    this.field = field;
+  }
+
+  FacetEntry.prototype.nameForPresenting = function () {
+    return this.name;
+  }
+
+  FacetEntry.prototype.valueForQuerying = function () {
+    return "\"" + this.name + "\"";
+  }
+
+  function DateTimeFacetEntry(name, count, field) {
+    this.name = name;
+    this.count = count;
+    this.field = field;
+  }
+
+  function ReferenceFacetEntry(model, count, field) {
+    this.name = model.id;
+    this.model = model;
+    this.count = count;
+    this.field = field;
+  }
+
+  ReferenceFacetEntry.prototype = new FacetEntry();
+
+  DateTimeFacetEntry.prototype = new FacetEntry();
+
+  DateTimeFacetEntry.prototype.nameForPresenting = function () {
+    if (!this._date) {
+      this._date = new Date(0);
+      this._date.setUTCSeconds(this.name/1000);
+    }
+    if (!this._dateString) {
+      if (this._date.getUTCDate() == 1 && this._date.getUTCMonth() == 0) {
+        this._dateString = this._date.getUTCFullYear();
+      } else if (this._date.getUTCDate() == 1) {
+        this._dateString = this._date.getUTCMonth()+1 + "/" + this._date.getUTCFullYear();
+      } else {
+        this._dateString = this._date.getUTCMonth()+1 + "/" + this._date.getUTCDate() + this.getUTCFullYear();
+      }
+    }
+    return this._dateString;
+  }
+
+  ReferenceFacetEntry.prototype.nameForPresenting = function () {
+    return this.model.title;
+  }
+
+  ReferenceFacetEntry.prototype.valueForQuerying = function () {
+    return this.name + "-" + this.nameForPresenting();
+  }
+
+  function Facet(name, options) {
+    this.name    = name;
+    this.type    = " "
+    if (this.name === 'collectionId') {
+      this.name = "collection"
+      this.type = "collection"
+      this.klass = Collection
+    } else {
+      this.type = "terms"
+    }
+    this.data    = options;
+  }
+
+  Facet.prototype.visible = function () {
+    return (this._entries && this._entries.length >= 1);
+  }
+
+  Facet.prototype.entries = function () {
+    if (typeof this._entries !== 'undefined') {
+      return this._entries;
+    }
+    this._entries = [];
+    var name = this.name;
+
+    switch (this.type) {
+    case "terms":
+      angular.forEach(this.data['buckets'], function (term) {
+        this.push(new FacetEntry(term.key, term.docCount, name));
+      }, this._entries);
+      break;
+    case "collection":
+      var entries = this._entries;
+      angular.forEach(this.data['buckets'], function (term) {
+        this.klass.get(parseInt(term.key)).then(function (model) {
+          entries.push(new ReferenceFacetEntry(model, term.docCount, name + "_id"));
+        })
+      }, this);
+      break;
+    }
+    return this._entries;
+  }
+
+  return Facet;
+}])
+.filter('toItems', ['Item', function (Item) {
+  var items = [];
+  return function (data, options) {
+    items.length = 0;
+    if (data) {
+      angular.forEach(data, function (result) {
+        if (typeof result.$delete !== 'undefined') {
+          items.push(result);
+        } else {
+          items.push(angular.copy(new Item(result), result));
+        }
+      });
+    }
+    return items;
+  }
+}])
+.factory('Query', ['$location', function ($location) {
+
+  var getUnique = function(things){
+    var u = {}, a = [];
+    for(var i = 0, l = things.length; i < l; ++i){
+      if(u.hasOwnProperty(things[i])) {
+        continue;
+      }
+      a.push(things[i]);
+      u[things[i]] = 1;
+    }
+    return a;
+  }
+
+  function getSearchFromQueryString (queryString) {
+    if (typeof queryString !== 'undefined' && queryString !== null) {
+      if (angular.isArray(queryString)) {
+        return queryString;
+      }
+      //don't break apart strings in quotes or in parentheses
+      var match = queryString.match(/(\([^\)]+\))|[^,\"]*\"[^\"]+\"|[^,]+/g);
+      if (match) {
+        return getUnique(match);
+      } else {
+        return [];
+      }
+    } else {
+      return [];
+    }
+  }
+
+  function Query (queryString) {
+    if (angular.isArray(queryString)) {
+      this.queryParts = queryString;
+      this.updateQueryString();
+    } else if (angular.isString(queryString)) {
+      this.queryString = queryString;
+      this.updateQueryParts();
+    } else if (typeof queryString !== 'undefined' && queryString != null) {
+      var query = Query(queryString.query);
+      if (queryString.onQueryBuilt) {
+        queryString.onQueryBuilt(query);
+      }
+      return query;
+    } else {
+      this.queryString = "";
+      this.updateQueryParts();
+    }
+    this.string = "";
+  }
+
+  Query.prototype.updateQueryParts = function () {
+    this.queryParts = getSearchFromQueryString(this.queryString);
+  }
+
+  Query.prototype.updateQueryString = function () {
+    this.queryString = this.queryParts.join(',');
+    if (this.queryString == '') {
+      this.queryString = null;
+    }
+  }
+
+  Query.prototype.commit = function () {
+    if (this.string && this.string != '') {
+      this.queryParts.push(this.string);
+      this.string = "";
+      this.perform();
+    }
+  }
+
+  Query.prototype.add = function (thing) {
+    this.queryParts.push(thing);
+    this.perform();
+  }
+
+  Query.prototype.remove = function (thing) {
+    this.queryParts.splice(this.queryParts.indexOf(thing), 1);
+    this.perform();
+  }
+
+  Query.prototype.perform = function () {
+      this.updateQueryString();
+      $location.search('page', 1);
+      $location.search('query', this.queryString);
+  }
+
+  Query.prototype.partsForQuery = function () {
+    var parts = [];
+    angular.forEach(this.queryParts, function (part) {
+      var val = part;
+      if (part.match(/(.+_id):\"(\d+)-(.*)\"/)) {
+        val = part.replace(/(.+_id):\"(\d+)-(.*)\"/,"$1:\"$2\"");
+      }
+      parts.push(val);
+    });
+    return parts;
+  }
+
+  Query.prototype.toSearchQuery = function () {
+    var string = this.partsForQuery().join(',');
+    if (string == '') {
+      return null;
+    } else {
+      return string;
+    }
+  }
+
+  Query.prototype.toSearchQueryParam = function () {
+    var string = this.partsForQuery().join(',');
+    if (string == '') {
+      return null;
+    }
+    return string;
+  }
+  return Query;
+}]);

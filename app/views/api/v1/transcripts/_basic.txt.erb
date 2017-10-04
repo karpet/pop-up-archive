@@ -1,0 +1,13 @@
+<%- n=0 %>
+<% if params["timestamps"] == "true" %>
+	<%= "\r" + "00:00:00" %>
+<% end %>
+<%- transcript.timed_texts.each_with_index do |tt, index| 
+      n=n+1-%>
+<% if params["timestamps"] == "true" %>
+	<%= if n%7===0 
+	      "\n\r" + format_time(tt.start_time) + "\r\n"
+	    end -%>
+<% end %>
+<%= tt.text + " " -%>
+<%- end -%>

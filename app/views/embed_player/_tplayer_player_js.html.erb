@@ -1,0 +1,43 @@
+<% file_id    ||= @file_id %>
+<% audio_file ||= @audio_file || AudioFile.find(file_id.to_i) %>
+<% title      ||= @title || audio_file.item.title %>
+<% mp3        ||= @mp3   || audio_file.url(:mp3) %>
+<% ogg        ||= @ogg   || audio_file.url(:ogg) %>
+<% start      ||= @start || 0 %>
+<% my_end     ||= @end   || false %>
+<script type="text/javascript">
+  $(document).ready(function(){
+    $("#pua-tplayer-<%= file_id %>").jPlayer({
+      ready: function (ev) {
+        var playerUsed = ev.jPlayer.html.used ? 'html' : 'flash';
+        //console.log('player used:', playerUsed);
+        $(this).jPlayer("setMedia", {
+          title: "<%= title %>",
+          mp3: "<%= mp3 %>",
+          oga: "<%= ogg %>",
+        });
+      },
+      loadedmetadata: function() {
+        var jplayer = this;
+        jplayer.puaTplayer = new PUATPlayer({
+          fileId: '<%= file_id %>',
+          jplayer: jplayer,
+          play: { start: parseInt(<%= start %>), end: <%= my_end %>, now: <%= @play_on_load ? 'true' : 'false' %> }
+        });
+      },
+      ended: function() {
+        var player = this;
+        //console.log('player ended', player);
+      },
+      cssSelectorAncestor: '#jp_container-<%= file_id %>',
+      smoothPlayBar: true,
+      keyEnabled: true,
+      remainingDuration: true,
+      toggleDuration: true,
+      swfPath: "<%= asset_path 'Jplayer.swf' %>",
+      solution: "html, flash",
+      supplied: "oga, mp3"
+    });
+  });
+</script>
+<%= javascript_include_tag "player" %>

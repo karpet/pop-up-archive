@@ -1,0 +1,13 @@
+.modal
+  .modal-dialog
+    .modal-content
+      .modal-header
+        button type="button" class="close" aria-label="Close" ng-click="$hide()"
+          span aria-hidden="true" &times;
+        h3 Destination Field Descriptions
+      .modal-body
+        .decriptions ng-repeat="item in itemHelp"
+          h2.title() {{item.title}}
+          .content ng-bind-html="item.content"
+      .modal-footer
+        button.btn.btn-default type="button" ng-click="$hide()" Close

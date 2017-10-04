@@ -1,0 +1,704 @@
+angular.module('Directory.items.controllers', ['Directory.loader', 'Directory.user', 'Directory.items.models', 'Directory.entities.models', 'Directory.people.models', 'prxSearch', 'Directory.storage', 'ngRoute', 'ngSanitize', 'djds4rce.angular-socialshare'])
+.controller('ItemsCtrl', [ '$scope', 'Item', 'Loader', 'Me', 'Storage', function ItemsCtrl($scope, Item, Loader, Me, Storage) {
+
+  $scope.Storage = Storage;
+
+  Me.authenticated(function (data) {
+    if ($scope.collectionId) {
+      $scope.items = Loader.page(Item.query(), 'Items');
+    }
+  });
+
+  $scope.startUpload = function() {
+    var newFiles = [];
+    var newImages = [];
+    $scope.$emit('filesAdded', newFiles);
+  }
+
+}])
+.controller('ItemCtrl', ['$scope', '$timeout', '$q', '$modal', '$http', '$route', 'Item', 'Loader', 'Me', '$routeParams', 'Collection', 'Entity', '$location', 'SearchResults', 'Storage', '$window', 'Speaker', function ItemCtrl($scope, $timeout, $q, $modal, $http, $route, Item, Loader, Me, $routeParams, Collection, Entity, $location, SearchResults, Storage, $window, Speaker) {
+  $scope.adobe = $window.adobe;
+  $scope.xmpDump = function() {
+    var timedTexts = $scope.item.audioFiles[0].transcript.parts;
+    var generateMarkerString = function() {
+      var markerString = "";
+      for (var i=0;i<timedTexts.length;i++) {
+        var startTime = parseInt(timedTexts[i].startTime)*1000;
+        var duration = parseInt(timedTexts[i].endTime)*1000 - startTime;
+        var thisMarker = "xmp.appendArrayItem(XMPConst.NS_DM, trackIndexPath+'xmpDM:markers', null, XMPConst.PROP_IS_STRUCT);"+
+          "var markerIndexPath = XMPUtils.composeArrayItemPath(XMPConst.NS_DM, trackIndexPath+'xmpDM:markers', XMPConst.ARRAY_LAST_ITEM);"+
+          "xmp.setStructField(XMPConst.NS_DM, markerIndexPath, XMPConst.NS_DM, 'name', '"+timedTexts[i].text.replace(/'/g, "\\'")+"');"+
+          "xmp.setStructField(XMPConst.NS_DM, markerIndexPath, XMPConst.NS_DM, 'startTime', "+startTime+");"+
+          "xmp.setStructField(XMPConst.NS_DM, markerIndexPath, XMPConst.NS_DM, 'duration', "+duration+");";
+        markerString += thisMarker;
+      };
+      return markerString;
+    };
+    var generateEvalString = function() {
+      var markerString = generateMarkerString();
+      var evalString = "var projectItem = app.project.rootItem.children[0];"+
+      "if (projectItem != null) {"+
+        "if (ExternalObject.AdobeXMPScript == undefined) {"+
+          "ExternalObject.AdobeXMPScript = new ExternalObject('lib:AdobeXMPScript');"+
+        "}"+
+        "if (ExternalObject.AdobeXMPScript != undefined) {"+
+          "var xmp_blob = projectItem.getXMPMetadata();"+
+          "var xmp = new XMPMeta(xmp_blob);"+
+          "var hasXmpDMTracks = xmp.doesPropertyExist(XMPConst.NS_DM, 'Tracks');"+
+          "if (!hasXmpDMTracks) {"+
+            "xmp.setProperty(XMPConst.NS_DM, 'Tracks', null, XMPConst.PROP_IS_ARRAY);"+
+          "}"+
+          "xmp.appendArrayItem(XMPConst.NS_DM, 'Tracks', null, XMPConst.PROP_IS_STRUCT);"+
+          "var trackIndexPath = XMPUtils.composeArrayItemPath(XMPConst.NS_DM, 'Tracks', XMPConst.ARRAY_LAST_ITEM);"+
+          "xmp.setStructField(XMPConst.NS_DM, trackIndexPath, XMPConst.NS_DM, 'trackType', 'Speech');"+
+          "xmp.setStructField(XMPConst.NS_DM, trackIndexPath, XMPConst.NS_DM, 'trackName', 'text transcription');"+
+          "xmp.setStructField(XMPConst.NS_DM, trackIndexPath, XMPConst.NS_DM, 'frameRate', 'f1000');"+
+          "xmp.setProperty(XMPConst.NS_DM, trackIndexPath+'xmpDM:markers', null, XMPConst.ARRAY_IS_ORDERED);"+
+          markerString +
+          "var xmpData = xmp.serialize();"+
+          "projectItem.setXMPMetadata(xmpData);"+
+        "}"+
+      "}";
+      return evalString;
+    };
+
+    cs.evalScript(generateEvalString());
+  };
+  $scope.Storage = Storage;
+
+  $scope.storageModal = $modal({template: '/assets/items/storage.html', persist: false, show: false, backdrop: 'static', scope: $scope});
+
+  if ($routeParams.id) {
+    Loader.page(Item.get({collectionId:$routeParams.collectionId, id: $routeParams.id}), Collection.get({id:$routeParams.collectionId}), Collection.query(), 'Item-v2/'+$routeParams.id, $scope);
+  }
+
+  SearchResults.setCurrentIndex({id:$routeParams.id});
+  $scope.nextItem = SearchResults.getItem(SearchResults.currentIndex + 1);
+  $scope.previousItem = SearchResults.getItem(SearchResults.currentIndex - 1);
+  $scope.searchResults = SearchResults;
+
+  $scope.selectedAudioId = undefined;
+  $scope.$on('showThisPlayer', function(event, audioFile) {
+    $scope.selectedAudioId = audioFile.id;
+  });
+  $scope.showPlayer = function(audioFile) {
+    return $scope.selectedAudioId == audioFile.id;
+  }
+
+  $scope.radiotopiaCollections = [801, 1573, 1575, 1754, 1780, 1781, 1782];
+  $scope.displayDonate = function() {
+    if ($scope.collection) {
+      for (i=0; i<$scope.radiotopiaCollections.length; i++) {
+        if ($scope.collection.id == $scope.radiotopiaCollections[i]) {
+          return true;
+        }
+      }
+      return false;
+    };
+  };
+
+  $scope.clickDonate = function () {
+    mixpanel.track(
+      "Donation Button Clicked",{
+          "User": $scope.currentUser.name + ' ' + $scope.currentUser.email
+          }
+    );
+  };
+
+  $scope.clickPromote = function() {
+    mixpanel.track(
+      "Promote Button Clicked",{
+          "User": $scope.currentUser.name + ' ' + $scope.currentUser.email
+          }
+    );
+  };
+
+  $scope.updateImage = function(format) {
+    if (!format) format = 'thumb';
+    if ($scope.item && $scope.item.imageFiles.length) {
+      var images = $scope.item.imageFiles;
+      var image = images[0];
+      // TODO why this loop?
+      for (var i=1;i<images.length;i++) {
+        if (images[i].id > image.id) {
+          image = images[i];
+        }
+      }
+      return image.url[format][0];
+    } 
+    else if ($scope.collection && $scope.collection.imageFiles.length) {
+      var images = $scope.collection.imageFiles;
+      var image = images[0];
+      // TODO why this loop?
+      for (var i=1;i<images.length;i++) {
+        if (images[i].id > image.id) {
+          image = images[i];
+        }
+      }
+      return image.url[format][0];
+    }
+  };
+
+  $scope.isFileProcessing = function(file) {
+    var item = $scope.item;
+    var user = $scope.currentUser;
+    return (user && item && user.canEdit(item) && (file.transcript == null));
+  };
+
+  $scope.statusNotification = function(file) {
+    var statusHTML = "<h4>Status: " + file.currentStatus + "</h4>";
+    if (file.currentStatus == "<%= AudioFile::TRANSCODING_INPROCESS %>" || file.currentStatus == "<%= AudioFile::COPYING_INPROCESS %>") {
+      statusHTML += "<p>Preparing file.</p>";
+    } else if (file.premiumInProgress && file.currentStatus != "<%= AudioFile::UPLOADING_INPROCESS %>") {
+      statusHTML += "<p>Your Transcript will be ready soon. We'll email you when the full transcript is loaded.</p>";
+    } else if (file.currentStatus == "<%= AudioFile::UPLOAD_FAILED %>") {
+      statusHTML += '<p>Something went wrong with your upload. Try re-uploading with a stronger internet connection.</p>';
+    } else if (file.currentStatus == "<%= AudioFile::FINISHING_UPLOAD %>") {
+      statusHTML += '<p>Almost there! Your upload is completing.</p>';
+    } else if (file.currentStatus == "<%= AudioFile::TRANSCRIBE_INPROCESS %>") {
+      statusHTML += "<p>Your Transcript will be ready soon. We'll email you when the full transcript is loaded.</p> ";
+    } else if (file.currentStatus == "<%= AudioFile::BLANK_EMPTY_FILE %>") {
+      statusHTML +="<p>The file has no content.</p>";
+    } else if (file.currentStatus == "<%= AudioFile::STUCK %>") {
+      statusHTML += "<p>Your machine transcript is processing in real time (a 30-minute file will take at least 30 minutes). Taking longer than expected?</p><p><a href='https://popuparchiveorg.zendesk.com/hc/en-us/articles/203658520'>Make sure you're optimizing your upload.</a></p>";
+    } else if (file.currentStatus == "<%= AudioFile::CANCELLED %>") {
+      statusHTML += "<p>Something went wrong. Contact us at <a href='mailto:edison@popuparchive.com?subject=Help%20With%20Cancelled%20Audio%20File'>edison@popuparchive.com</a> for support.</p>";
+    }
+    return statusHTML;
+  };
+
+  $scope.allowEditButton = function(file) {
+    var item = $scope.item;
+    var found = true;
+    if (file.duration != null && file.duration <= 120 ) {
+      var found = false;
+    }
+    else {
+      if (file.currentStatus == "<%= AudioFile::TRANSCRIPT_BASIC_COMPLETE %>" || file.currentStatus == "<%= AudioFile::TRANSCRIPT_PREMIUM_COMPLETE %>") {
+          var found = false;
+      }
+    }
+    return found;
+  }
+
+  // our version of angular-strap does not support prefixEvent (below)
+  // so listen on 'modal-hide'
+  // TODO change when we upgrade.
+  $scope.$on('modal-hide', function() {
+    //console.log('modal hidden');
+    // re-enable buttons so can order for other audio on the page.
+    jQuery('button.ts-upgrade').not('.disabled').prop('disabled', false);
+  });
+
+  jQuery("#show-info").on("click", function() {
+    jQuery(".item-info").css("max-height", "none");
+    $(this).hide();
+    jQuery("#hide-info").show();
+  });
+  jQuery("#hide-info").on("click", function() {
+    jQuery(".item-info").css("max-height", "106px");
+    $(this).hide()
+    jQuery("#show-info").show();
+  });
+
+  $scope.itemStorage = function() {
+    $q.when($scope.storageModal).then( function (modalEl) {
+      console.log('modalEl:', modalEl);
+      modalEl.modal('show');
+    });
+  };
+  
+  $scope.clearEntities = function() {
+    $scope.item.entities.forEach(function(entity) {
+      if (entity.isConfirmed === false) {
+    	  $scope.deleteEntity(entity);
+      }
+    });
+  };
+
+  $scope.deleteEntity = function(entity) {
+    var e = new Entity(entity);
+    e.itemId = $scope.item.id;
+    e.deleting = true;
+    e.delete().then(function() {
+      $scope.item.entities.splice($scope.item.entities.indexOf(entity), 1);
+    });
+  };
+
+  $scope.confirmEntity = function(entity) {
+    // console.log('confirmEntity', entity);
+    entity.itemId = $scope.item.id;
+    entity.isConfirmed = true;
+    var entity = new Entity(entity);
+    entity.update();
+  };
+    
+  $scope.deleteItem = function () {
+    if (confirm("Are you sure you want to delete the item " + $scope.item.title +"? \n\n This cannot be undone." )){
+      $scope.item.delete().then(function () {
+        // even though the DELETE should be instantaneous from our POV,
+        // "sleep" a full second to let the search index sychronize.
+        // c.f. github issue #765
+        // NOTE we fire the location change *after* we broadcast the datasetChange,
+        // so that we mark all searches as stale.
+        $timeout(function(){ 
+          $scope.$broadcast('datasetChanged');
+          $location.path('/collections/' + $scope.collection.id);
+        }, 1000);
+      })
+    }
+  };
+  
+  $scope.encodeText = function (text) {
+    return encodeURIComponent(text);
+  };
+  
+// Update placeholder speaker names with contributor names
+  $scope.assignSpeaker = function(contributor, speaker) {
+    speaker.name = contributor.id.person.name;
+    var speaker = new Speaker(speaker);
+    speaker.update();
+  }
+
+  $scope.my_path= $window.location.protocol + "//" + $window.location.host;
+
+  $scope.searchEntity = function(entity) {
+    mixpanel.track("Entity search", {
+      "Location": "Item Page",
+      "Entity": entity,
+      "Item": $scope.item.title,
+      "Collection": $scope.collection.title
+    });
+  }
+
+}])
+.controller('ItemStorageCtrl', [ '$scope', 'Item', 'Loader', 'Me', function ItemsCtrl($scope, Item, Loader, Me) {
+
+  function pad(number) {
+    if (number < 10) {
+      return "0" + number;
+    }
+    return number;
+  }
+
+  $scope.durationString = function (secs) {
+    var d = new Date(secs * 1000);
+
+    return pad(d.getUTCHours()) + ":" + pad(d.getUTCMinutes()) + ":" + pad(d.getUTCSeconds());
+  };
+}])
+
+.controller('ItemFormCtrl', ['$window', '$cookies', '$scope', '$http', '$q', '$timeout', '$route', '$routeParams', '$modal', 'Me', 'Loader', 'Alert', 'Collection', 'Item', 'Contribution', 'ImageFile', 'AudioFile', function FilesCtrl($window, $cookies, $scope, $http, $q, $timeout, $route, $routeParams, $modal, Me, Loader, Alert, Collection, Item, Contribution, ImageFile, AudioFile) {
+
+  $scope.showFilesAlert = true;
+  
+  $scope.hideAlert = function() {
+    $scope.showFilesAlert = false;
+  };
+
+  $scope.showForm = function() {
+    if ($scope.currentUser.offerEnded && !$scope.currentUser.hasCreditCard()) {
+      return false
+    } else if ($scope.currentUser.overMonthlyLimit && !$scope.currentUser.isOrgMember()) {
+      return false
+    } else if (!$scope.currentUser.overMonthlyLimit) {
+      return true
+    } else {
+      return false
+    } 
+  }
+
+  $scope.$watch('item', function (is) {
+    if (!angular.isUndefined(is) && (is.id > 0) && angular.isUndefined(is.adoptToCollection)) {
+      is.adoptToCollection = is.collectionId;
+    }
+  });
+
+  $scope.selectedCollection = null;
+
+  $scope.$watch('item.collectionId', function (cid) {
+    $scope.setSelectedCollection();
+  })
+
+  $scope.$watch('item.adoptToCollection', function (cid) {
+    $scope.setSelectedCollection();
+  })
+
+  $scope.setSelectedCollection = function () {
+    if (angular.isUndefined($scope.item))
+      return;
+
+    var collectionId = $scope.item.adoptToCollection || $scope.item.collectionId;
+
+    if (collectionId && (collectionId > 0) && (!$scope.selectedCollection || (collectionId != $scope.selectedCollection.id))) {
+      for (var i=0; i < $scope.collections.length; i++) {
+        if ($scope.collections[i].id == collectionId) {
+          $scope.selectedCollection = $scope.collections[i];
+          break;
+        }
+      }
+    }
+  };
+
+  if ($scope.item && $scope.item.id) {
+    $scope.item.adoptToCollection = $scope.item.collectionId;
+  }
+
+  $scope.submit = function () {
+    //console.log('ItemFormCtrl submit: ', $scope.item);
+    var saveItem = $scope.item;
+    this.item = $scope.initializeItem(true);
+
+    var uploadFiles = saveItem.files;
+    if (uploadFiles && uploadFiles.length > 1 && !saveItem.id) {
+      // disallow multi-file upload on new Items
+      $scope.showFilesAlert = true;
+      return;
+    }
+    saveItem.files = [];
+    var uploadImageFiles = saveItem.images;
+    saveItem.images = [];
+
+    var audioFiles = saveItem.audioFiles;
+    var contributions = saveItem.contributions;
+
+    Collection.get(saveItem.collectionId).then(function (collection) {
+      if (angular.isArray(collection.items)) {
+        collection.items.push(saveItem);
+      }
+    });
+
+    if (saveItem.id) {
+      // console.log("save item id", saveItem.id);
+      saveItem.update().then(function (data) {
+        // reset tags
+        saveItem.tagList2Tags();
+        $scope.addRemoteImageFile(saveItem, $scope.urlForImage);
+        $scope.addRemoteAudioFiles(saveItem);
+        $scope.uploadImageFiles(saveItem, uploadImageFiles);        
+        $scope.uploadAudioFiles(saveItem, uploadFiles);
+        $scope.updateAudioFiles(saveItem, audioFiles);
+        $scope.updateContributions(saveItem, contributions);
+        delete $scope.item;
+
+        // reload current page so we can see the change
+        $timeout(function() { $route.reload() }, 1000);
+
+        // console.log('scope after update', $scope);
+        // $scope.item = saveItem;
+        // if ($scope.item != $scope.$parent.item) {
+        //   angular.copy($scope.item, $scope.$parent.item);
+        // }
+      });
+    } else {
+      saveItem.create().then(function (data) {
+        // reset tags
+        saveItem.tagList2Tags();
+        $scope.addRemoteImageFile(saveItem, $scope.urlForImage);
+        $scope.addRemoteAudioFiles(saveItem);
+        $scope.uploadImageFiles(saveItem, uploadImageFiles);
+        $scope.uploadAudioFiles(saveItem, uploadFiles);
+        $scope.updateAudioFiles(saveItem, audioFiles);
+        $scope.updateContributions(saveItem, contributions);
+        $timeout(function(){ $scope.$broadcast('datasetChanged')}, 750);
+        delete $scope.item;
+
+        // reload current page so we can see the change
+        $timeout(function() { $route.reload() }, 1000);
+
+        // console.log('scope after create', $scope);
+      });
+    }
+
+  };
+
+  $scope.addRemoteAudioFiles = function (saveItem){
+    if (!$scope.remoteFileUrls) {
+      return;
+    }
+    angular.forEach($scope.remoteFileUrls, function(url) {
+      //console.log('addRemoteAudioFile:', url);
+      var af = new AudioFile({remoteFileUrl: url, itemId: saveItem.id});
+      af.create();
+    });
+    delete $scope.remoteFileUrls;
+  };
+
+  $scope.addRemoteImageFile = function (saveItem, imageUrl){
+    if (!$scope.urlForImage)
+      return;
+    new ImageFile({remoteFileUrl: imageUrl, container: "items", containerId: saveItem.id} ).create();      
+    $scope.item.images.push({ name: 'name', remoteFileUrl: imageUrl, size: ''});
+    //console.log("url link", $scope.urlForImage);
+    $scope.urlForImage = "";
+  };
+
+  $scope.looksLikeValidFileName = function(file) {
+    var extPattern = /\.(aac|aif|aiff|alac|flac|m4a|m4p|mp2|mp3|mp4|ogg|raw|spx|wav|wma)$/i;
+    return file.match(extPattern);
+  };
+
+  // used by the upload-button callback when new files are selected
+  $scope.setFiles = function(event) {
+    element = angular.element(event.target);
+
+    $scope.$apply(function($scope) {
+
+      var newFiles = element[0].files;
+
+      // validate file extension(s). If any fail, they all fail.
+
+      // clear any error first
+      element.closest('.form-group').removeClass('has-error');
+      element.next('.alert-danger').remove();
+      var numValid = 0;
+      angular.forEach(newFiles, function(file) {
+        if ((file.name).match(/\.zip/i)) {
+          element.closest('.form-group').addClass('has-error');
+          element.after('<div class="alert alert-danger">Not a valid audio file: '+file.name+'</div>');
+        }
+        else if (!$scope.looksLikeValidFileName(file.name)) {
+          element.closest('.form-group').addClass('has-error');
+          element.after('<div class="alert alert-danger">Not a valid audio file: '+file.name+'</div>');
+        }
+        else {
+          numValid++;
+        }
+      });
+      if (numValid !== newFiles.length) {
+        //console.log("some invalid file names found");
+        return;
+      }
+
+      // default title to first file if not already set
+      if (!$scope.item.title || $scope.item.title == "") {
+        $scope.item.title = newFiles[0].name;
+      }
+
+      $scope.item.transcriptType = $scope.currentUser.defaultTranscriptType();
+
+      if (!$scope.item.files) {
+        $scope.item.files = [];
+      }
+
+      // add files to the item
+      angular.forEach(newFiles, function (file) {
+        $scope.item.files.push(file);
+      });
+
+      element[0].value = "";
+
+    });
+  };
+
+  $scope.setImageFiles = function(event) {
+    element = angular.element(event.target);
+
+    $scope.$apply(function($scope) {
+
+      var newImageFiles = element[0].files;
+      // console.log('image files',element[0].files);
+
+      if (!$scope.item.images) {
+        $scope.item.images = [];
+      }
+
+      // add image files to the item
+      angular.forEach(newImageFiles, function (file) {
+        $scope.item.images.push(file);
+      });
+
+      element[0].value = "";
+
+    });
+  };
+
+  $scope.addItemFromURL = function(ev) {
+    //console.log('remoteFileUrls currently:', $scope.remoteFileUrls);
+    var btn = angular.element(ev.target);
+    // find the closest input to btn
+    var inputField = btn.closest('.remote-item').children('.remote-item-url');
+    //console.log(btn, inputField);
+    var remoteFileUrl = inputField.val();
+    //console.log('remoteFileUrl:', remoteFileUrl);
+    if (!remoteFileUrl || !remoteFileUrl.length) {
+      return;
+    }
+    else {
+      // clear any error first
+      inputField.closest('.form-group').removeClass('has-error');
+      inputField.next('.help-block').remove();
+
+      // validate the URL string
+      var urlPattern = /^(http|ftp|https):\/\/[\w-]+(\.[\w-]+)+([\w.,@?^=%&amp;:\/~+#-]*[\w@?^=%&amp;\/~+#-])?$/;
+      if (!remoteFileUrl.match(urlPattern)) {
+        // add warning to input field
+        //console.log("bad url:", remoteFileUrl);
+        inputField.closest('.form-group').addClass('has-error');
+        inputField.after('<span class="help-block">Fix the URL</span>');
+        return;
+      }
+      var contentType;
+      if (!$scope.looksLikeValidFileName(remoteFileUrl)) {
+        $http.post(
+          '/headcheck',
+          {url: remoteFileUrl}
+        ).success(function(data) {
+          contentType = data["content-type"];
+          if (!contentType.match(/audio/)) {
+            inputField.closest('.form-group').addClass('has-error');
+            inputField.after('<span class="help-block">Not a valid audio link</span>');
+            return;
+          } else {
+            inputField.val(''); // clear field for re-use
+            if (!$scope.remoteFileUrls) {
+              $scope.remoteFileUrls = [];
+            }
+            $scope.remoteFileUrls.push( remoteFileUrl );
+          }
+        });
+      } else {
+        // looks ok. go ahead and add it.
+        inputField.val(''); // clear field for re-use
+        if (!$scope.remoteFileUrls) {
+          $scope.remoteFileUrls = [];
+        }
+        $scope.remoteFileUrls.push( remoteFileUrl );
+        //console.log('remoteFileUrls now:', $scope.remoteFileUrls);
+      }
+    }
+
+  };
+
+  $scope.removeRemoteUrl = function(url) {
+    var pruned = [];
+    angular.forEach($scope.remoteFileUrls, function(rfu) {
+      if (url != rfu) {
+        pruned.push( rfu );
+      }
+    });
+    $scope.remoteFileUrls = pruned;
+  };
+
+  $scope.removeAudioFile = function(file) {
+    if (file.id && (file.id > 0)) {
+      file._delete = true;
+    } else {
+      $scope.item.files.splice($scope.item.files.indexOf(file), 1);
+    }
+  }
+
+  $scope.removeImageFile = function(imageFile) {
+    if (imageFile.id && (imageFile.id > 0)) {
+      imageFile._delete = true;
+    } else {
+      $scope.item.images.splice($scope.item.images.indexOf(imageFile), 1);
+    }
+  }
+
+  $scope.addContribution = function () {
+    var c = new Contribution();
+    if (!$scope.item.contributions) {
+      $scope.item.contributions = [];
+    }
+    $scope.item.contributions.push(c);
+  }
+
+  $scope.deleteContribution = function(contribution) {
+    // mark it to delete later
+    if (contribution.id && (contribution.id > 0)) {
+      contribution._delete = true;
+    } else {
+      $scope.item.contributions.splice($scope.item.contributions.indexOf(contribution), 1);
+    }
+  }
+
+  $scope.updateContributions = function(item, contributions) {
+    item.contributions = contributions;
+    item.updateContributions();
+  };
+
+  $scope.updateAudioFiles = function(item, audioFiles) {
+    item.audioFiles = audioFiles;
+    item.updateAudioFiles();
+  };
+
+  $scope.tagSelect = function() {
+    return {
+      placeholder: 'Tags...',
+      width: '284px',
+      tags: [],
+      initSelection: function (element, callback) { 
+        callback($scope.item.getTagList());
+      }
+    }
+  };
+
+  $scope.languageSelect = function() {
+    return {
+      placeholder: 'Language...',
+      width: '220px',
+      data: Item.languages,
+      initSelection: function (element, callback) { 
+        callback(element.val());
+      }
+    }
+  };  
+
+  // the ajax version, maybe?
+  // $scope.languageSelect = function() {
+  //   return {
+  //     placeholder: 'Language...',
+  //     width: '220px',
+  //     ajax: {
+  //       url: '/languages.json',
+  //       results: function (data) {
+  //         return {results: data};
+  //       }
+  //     },
+  //     initSelection: function (element, callback) { 
+  //       callback($scope.item.language);
+  //     }
+  //   }
+  // };  
+
+  $scope.roleSelect = {
+    placeholder:'Role...',
+    width: '160px'
+  };
+
+  $scope.peopleSelect = {
+    placeholder: 'Name...',
+    width: '240px',
+    minimumInputLength: 2,
+    quietMillis: 100,
+    formatSelection: function (person) { return person.name; },
+    formatResult: function (result, container, query, escapeMarkup) { 
+      var markup=[];
+      $window.Select2.util.markMatch(result.name, query.term, markup, escapeMarkup);
+      return markup.join("");
+    },
+    createSearchChoice: function (term, data) {
+      if ($(data).filter(function() {
+        return this.name.toUpperCase().localeCompare(term.toUpperCase()) === 0;
+      }).length === 0) {
+        return { id: 'new', name: term };
+      }
+    },
+    initSelection: function (element, callback) {
+      var scope = angular.element(element).scope();
+      callback(scope.contribution.person);
+    },
+    ajax: {
+      url: function (self, term, page, context) {
+        return '/api/collections/' + ($routeParams.collectionId || $scope.item.collectionId) + '/people';
+      },
+      data: function (term, page) { return { q: term }; },
+      results: function (data, page) { return { results: data }; }
+    }
+  }
+
+}])
+.run(['$FB', function($FB) {
+  $FB.init('<%= ENV["FACEBOOK_APP_ID"] %>');
+}]);

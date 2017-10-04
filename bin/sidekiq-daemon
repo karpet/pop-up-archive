@@ -1,0 +1,3 @@
+#!/bin/sh
+
+nohup sidekiq -C ./config/sidekiq.yml >> log/sidekiq.log &

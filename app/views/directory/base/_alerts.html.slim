@@ -1,0 +1,5 @@
+#alerts-wrapper
+  #alerts-container ng-controller="AlertCtrl"
+    a.activity pop-up-alerts-dropdown="alertData.alerts" ng-class="{'with-information':alertData.alerts.length}"
+      span.number-circle.ng-cloak ng-show="alertData.alerts.length" title="Click to toggle Alerts" {{alertData.alerts.length}}
+

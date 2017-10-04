@@ -1,0 +1,6 @@
+.alerts.message-container
+  .alert.am-fade ng-class="'alert-' + message.type" ng-repeat="message in messages"
+    button.close type="button" ng-click="removeMessage($index)"  &times;
+    strong ng-bind="message.title" 
+    | &nbsp;
+    span ng-bind-html="message.content"

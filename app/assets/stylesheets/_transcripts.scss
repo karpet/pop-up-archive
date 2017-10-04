@@ -1,0 +1,257 @@
+@import "mixins";
+
+.transcript_overlay {
+  background: rgba(0, 0, 0, 0.7);
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  position: absolute;
+  top: 0;
+  left: 0;
+  &.ui-animate {
+    opacity: 0;
+  }
+  .loading-indicator {
+    position: absolute;
+    margin-top: 50px;
+    width: 100%;
+    text-align: center;
+    color: #fff;
+    font-weight: 800;
+    font-size: 1.5em;
+  }
+}
+
+#saved-transcript {
+  display: none;
+  position: fixed;
+  top: 70px;
+  left: 4px;
+  font-size: 22px;
+  color: #00CE49;
+  background-color:#FFF;
+  padding: 5px;
+  z-index: 1030;
+}
+
+#error-transcript {
+  display: none;
+  position: fixed;
+  top: 70px;
+  left: 4px;
+  font-size: 18px;
+  color: #cc0000;
+  padding: 5px;
+  z-index: 1030;
+  width: 144px;
+  background-color: #FFF;
+  .error-heading {
+    font-weight: bold;
+  }
+}
+
+.collapsed .file-transcript {
+  max-height: 200px;
+}
+
+.btn-transcript {
+  background: #F9A732;
+  color: white;
+}
+
+.search-result .file-transcript {
+  line-height: 16px;
+  font-size: 11px;
+  overflow: hidden;
+  padding: 0;
+
+  .segment {
+    margin: 0;
+    font-size: 14px;
+    &::before {
+      content: "\A";
+      white-space: pre;
+    }
+    .fa-pause {
+      display: none;
+    }
+    .time-and-speaker {
+      display: inline;
+      margin-left: 4px;
+      color: #C0C0C0;
+    }
+  }
+
+  .file-transcript-text {
+    height: 15px;
+    -webkit-marquee: auto medium infinite scroll normal;
+    color: #545454;
+    max-width: 90%;
+  }
+
+  .current {
+    color: #545454;
+  }
+
+  em {
+    background-color: yellow;
+    font-weight: bold;
+  }
+}
+
+.segment {
+  display: inline;
+  font-size: 18px;
+  .time-and-speaker {
+    display: block;
+  }
+  div {
+    display: inline;
+    .time-and-speaker {
+      display: none;
+    }
+  }
+  .popover {
+    .popover-content {
+      padding: 0;
+    }
+    max-width: none;
+    .contributors span {
+      padding: 4px;
+    }
+  }
+}
+
+.file-transcript {
+  outline: none;
+  padding: 0px 10%;
+  display: block;
+  overflow: auto;
+  clear: right;
+  width: 100%;
+  cursor: pointer;
+
+  a {
+    color: #444;
+    text-decoration: none;
+    &:hover {
+      text-decoration: none;
+    }
+  }
+
+  input {
+    width: 100%;
+  }
+
+  .played .file-transcript-text{
+    color: #545454;
+  }
+
+  .current .file-transcript-text{
+    color: #8989F1;
+  }
+
+  .timestamp {
+    width: 16px;
+    text-align:left;
+    padding-right: 5px;
+    color: #C0C0C0;
+  }
+
+  // .keytime {
+  //   color: #DADADA;
+  // }
+
+  .play {
+    width: 8px;
+    text-align:left;
+  }
+
+  .newParagraph {
+    margin-top: 12px;
+    &.segment div .time-and-speaker {
+      display: block;
+    }
+  }
+
+  .file-transcript-text {
+    overflow: hidden;
+    color: #d3d3d3;
+    cursor: text;
+  }
+}
+.file-transcript[contenteditable="false"] .file-transcript-text {
+  cursor: pointer;
+}
+
+.file-transcript::-webkit-scrollbar {
+  -webkit-appearance: none;
+  width: 7px;
+}
+
+.file-transcript::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background-color: rgba(0,0,0,.5);
+  -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
+}
+
+.key-commands {
+  font-size: 13px;
+  position: fixed;
+  width: 100%;
+  bottom: 0;
+  z-index: 1000;
+  background-color: #FFF;
+  @media(max-width: 765px) {
+    display: none;
+  }
+  ul {
+    margin: 0;
+  }
+  li {
+    display: inline;
+  }
+}
+
+.transcript-options {
+  .search-group {
+    display: inline-block;
+    position: relative;
+    margin-right: .2em;
+    margin-top: 3px;
+  }
+
+  .clear-filter {
+    position: absolute;
+    z-index: 10;
+    right: 6px;
+    top: 3px;
+    color: #ddd;
+    font-size: 20px;
+    &:hover {
+      text-decoration: none;
+      color: #999;
+    }
+  }
+
+  .search-query {
+    width: 50px;
+    border-radius: 22px;
+    min-width: 75px;
+    @include transition(all, 0.2s, ease);
+    height: 27px;
+
+    &:active, &:focus, &.extended {
+      width: 200px;
+    }
+  }
+}
+
+
+// Todo: remove
+// .glow {
+//   box-shadow: 0 0 5px rgba(81, 203, 238, 1);
+//   padding: 3px 0px 3px 3px;
+//   margin: 5px 1px 3px 0px;
+//   border: 1px solid rgba(81, 203, 238, 1);
+// }

@@ -1,0 +1,59 @@
+- logos = { "soundcloud" => ENV['SOUNDCLOUD_LOGO_SMALL']}
+- file_id    ||= @file_id
+- audio_file ||= @audio_file || AudioFile.find(file_id.to_i)
+- title      ||= @title
+- item       ||= @item || @audio_file.item
+
+.pua-tplayer id="pua-tplayer-#{file_id}-player"
+    .img-player
+      .jp-jplayer.pua-tplayer id="pua-tplayer-#{file_id}"
+      .jp-audio.player id="jp_container-#{file_id}" 
+        .jp-type-single
+          -if audio_file.item.image_thumb
+            .img
+              a href="#{audio_file.item.digital_location}" target="_blank" 
+                img src="#{audio_file.item.image_thumb}"
+          .body.jp-gui.jp-interface
+            .jp-title
+              h2 #{item.title}
+            .title-sub
+              p
+                - if item.respond_to?(:coll_categories)
+                  - item.coll_categories.each do |category|
+                    a.category href='#{root_url}category/#{category}'
+                      | #{category}
+                a href="#{root_url}collections/#{item.collection_id}"
+                  |  from #{item.collection_title}
+                a.twitter-share-button href="https://twitter.com/share" data-count="none" data-via=twitter_user data-text="Listen to #{@title} from #{item.collection_title}" Tweet
+            .description
+              p 
+                span.date 
+                  | #{item.date_created ? item.date_created.to_datetime.strftime('%m/%d/%Y') : ''}  
+                | #{raw item.description}
+            .clear
+            .tplayer-bar
+              .tplayer-bar-inner
+              .jp-controls.pull-left
+                button.jp-play.player-button id="jp-play-button-#{file_id}" data-collection='#{item.collection_title}' data-file='#{title} (#{file_id.to_s})'
+                  i.fa.fa-play
+                button.jp-pause.player-button id="jp-pause-button-#{file_id}"
+                  i.fa.fa-pause
+              .tplayer-stats.pull-right
+                .jp-time-holder
+                  .jp-current-time role="timer" aria-label="time" 
+                  .sep
+                    | /
+                  .jp-duration role="timer" aria-label="duration" 
+              .jp-progress
+                .jp-seek-bar
+                  .jp-play-bar
+                / .scrubber
+                  / canvas
+            .clear
+          .jp-no-solution
+            span
+              | Update Required
+              | To play the media you will need to either update your browser to a recent version or update your 
+              a href="http://get.adobe.com/flashplayer/" target="_blank"
+                | Flash plugin
+              | . 

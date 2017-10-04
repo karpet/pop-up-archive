@@ -1,0 +1,17 @@
+ul.navbar-nav.nav
+  li#alerts-container ng-controller="AlertCtrl"
+    a.activity pop-up-alerts-dropdown="alertData.alerts" ng-class="{'with-information':alertData.alerts.length}"
+      span.number-circle.ng-cloak ng-show="alertData.alerts.length" {{alertData.alerts.length}}
+
+form.navbar-form ng-controller="GlobalSearchCtrl" ng-submit="go()"
+  input.search-query.form-control style="width:150px" ng-model="query.string" placeholder='Search' type='search'
+  
+ul.navbar-nav.nav.navbar-right
+  //li= link_to('about', '/about', {target: '_self'})
+  li= link_to('user stories', '/user_stories')
+  li= link_to('blog', 'http://blog.popuparchive.com/', {target: '_blank'})
+  li= link_to('explore', '/explore')
+  li= link_to('pricing', '/pricing')
+  li= link_to('faq', '/faq')
+  li
+    i.fa.fa-search

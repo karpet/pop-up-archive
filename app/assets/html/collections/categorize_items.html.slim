@@ -1,0 +1,19 @@
+// TODO this seems entirely vestigal
+div ng-controller="UploadCategorizationCtrl"
+  .modal-header
+    button type="button" class="close" ng-click="dismiss()" data-dismiss="modal" aria-hidden="true" x
+    h3 Move Uploads to a Collection
+  .modal-body
+    p
+      | You are moving  
+      strong ng-pluralize="" count="selectedItems.length" offset="3" when="{'1':'{{selectedItems[0].getTitle()}}','2':'{{selectedItems[0].getTitle()}} and {{selectedItems[1].getTitle()}}', '3': '{{selectedItems[0].getTitle()}}, {{selectedItems[1].getTitle()}}, and {{selectedItems[2].getTitle()}}', 'one': '{{selectedItems[0].getTitle()}}, {{selectedItems[1].getTitle()}}, {{selectedItems[2].getTitle()}}, and one other item', 'other': '{{selectedItems[0].getTitle()}}, {{selectedItems[1].getTitle()}}, {{selectedItems[2].getTitle()}}, and {} other items'}"
+      |  to a collection.
+    form.form-horizontal
+      .form-group
+        label.control-label
+          | Collection
+        .controls
+          select ng-options="collection.id as collection.title for collection in collections | notUploads" ng-model="selectedItems.collectionId"
+  .modal-footer
+    button.btn.btn-default ng-click="dismiss()" Close
+    button.btn.btn-primary ng-click="submit()" Save

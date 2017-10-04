@@ -1,0 +1,16 @@
+{
+  "apiVersion": "1.0",
+  "swaggerVersion": "1.2",
+  "basePath": "XXX",
+  "apis": [
+    {
+      "path": "api-docs/v1/collections.{format}"
+    },
+    {
+      "path": "api-docs/v1/items.{format}"
+    },
+    {
+      "path": "api-docs/v1/searches.{format}"
+    }
+  ]
+}

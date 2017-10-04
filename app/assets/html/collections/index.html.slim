@@ -1,0 +1,63 @@
+.row style="display:inline;"
+  h1 style="display:inline;" My Collections
+  .row style="display:inline;"
+    ul.pull-left.colhighlight class="pagination" 
+      li style="margin-left:5px;"
+        | page {{currentPage}}
+      li ng-class="{disabled: currentPage == 0}"
+        a href=" " ng-click="setPage(currentPage-1)" « Prev
+      li ng-repeat="n in range(pagedItems.length)" ng-class="{active: n == currentPage}" ng-click="setPage(currentPage)">
+        a href=" " ng-bind="n + 1" 1
+      li ng-class="{disabled: currentPage == pagedItems.length - 1}"
+        a href=" " ng-click="setPage(currentPage+1)" Next »
+    .page-nav.pull-right
+      button.btn.btn-default type="button" bs-popover="batchUpload" data-placement="bottom" html="true" auto-close="true"
+        i.fa.fa-th-list
+        |  Batch Upload
+.row
+  .alert.alert-info
+    | Use collections to group and organize your audio files. Upload a file below to create an 
+    span.colhighlight Item
+    i.fa.fa-question-circle style="margin-left:1px; margin-right:3px;" bs-popover="itemHelp['item']" data-placement="bottom" html="true" auto-close="true"
+    | page in any Pop Up Archive collection.
+  button.collection-button.add-collection ng-href="#" ng-click="newCollection()"
+    i.fa.fa-plus &nbsp
+    | Create a Collection
+  ul.collections-list ng-class="pagination"
+    li.collection-box ng-repeat="collection in collections | notUploads" 
+      span bs-popover="itemHelp['privacy']" data-placement="left" html="true" autoClose="true" class="ribbon" ng-class="{'public': collection.itemsVisibleByDefault, 'private': !collection.itemsVisibleByDefault}"
+      a ng-href="/collections/{{collection.id}}"
+        .col-image ng-show="collection.imageFiles.length" style="background-image:url('{{collection.getThumbImage()}}')"
+        .col-image ng-hide="collection.imageFiles.length" style="background-image:url('{{collection.dynamicImage}}')"
+        .image ng-hide="collection.imageFiles.length"
+            .box
+      .collection-info
+        div
+          a ng-href="/collections/{{collection.id}}"
+            h3 style="display: inline;" {{collection.title}}
+          span
+            ng-pluralize count="collection.numberOfItems" when="{'0': '(No Items yet)', '1': '(1 Item)', 'other': '({} Items)' }"
+        p() {{collection.description | characters:220}}
+      button.collection-button.upload-item-to-collection ng-click="uploadItemToCollection(collection.id)"
+        i.fa.fa-upload &nbsp
+        | Upload an Audio File to {{collection.title}}
+      .recent-items
+        .labels ng-hide="collection.numberOfAudioFiles == 0"
+          .col-xs-4 
+            | File
+            i.fa.fa-question-circle style="margin-left:1px; margin-right:3px;" bs-popover="itemHelp['audfile']" data-placement="right" html="true" auto-close="true"
+          .col-xs-4 
+            | Item
+            i.fa.fa-question-circle style="margin-left:1px; margin-right:3px;" bs-popover="itemHelp['colitem']" data-placement="right" html="true" auto-close="true"
+          .col-xs-4 
+            | Status
+            i.fa.fa-question-circle style="margin-left:1px; margin-right:3px;" bs-popover="itemHelp['status']" data-placement="right" html="true" auto-close="true"
+        ul.items-list 
+          li ng-repeat="file in collection.recentFiles"
+            .col-xs-4 ng-class-odd=" 'odd-file' " {{file.fileName  | limitTo : 32}} 
+            .col-xs-4 ng-class-odd=" 'odd-file' "
+              a ng-href="/collections/{{collection.id}}/items/{{file.itemId}}"{{file.itemName  | limitTo : 32}}
+            .col-xs-4 ng-class-odd=" 'odd-file' " {{file.fileStatus}}
+          li
+            a ng-show="collection.numberOfAudioFiles > 5" ng-href="/collections/{{collection.id}}" more...
+         

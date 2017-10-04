@@ -1,0 +1,775 @@
+(function () {
+
+  function getEvent(event) {
+    if (typeof event.originalEvent !== 'undefined') {
+      return event.originalEvent;
+    } else {
+      return event;
+    }
+  }
+  function secsForPPRO(secs) {
+    var hours   = Math.floor(secs / 3600);
+    var minutes = Math.floor((secs - (hours * 3600)) / 60);
+    var seconds = secs - (hours * 3600) - (minutes * 60);
+
+    if (hours   < 10) {hours   = "0"+hours;}
+    if (minutes < 10) {minutes = "0"+minutes;}
+    if (seconds < 10) {seconds = "0"+seconds;}
+    var time    = hours + ';' + minutes + ';' + seconds + ";00";
+    return time;
+}
+
+  angular.module('ngPlayer', ['ngSanitize'])
+  .factory('Player', ['$rootScope', '$window', function ($rootScope, $window) {
+    var adobe = $window.adobe;
+    var Player = {time: 0, loaded: false};
+    var waveformData = [];
+
+    function generateWaveform() {
+      waveformData.length = 0;
+      var l = 0;
+      var segments = parseInt(Math.random() * 1000 + 1000);
+
+      for (var i=0; i < segments; i++) {
+        l = waveformData[i] = Math.max(Math.round(Math.random() * 10) + 2, Math.min(Math.round(Math.random() * -20) + 50, Math.round(l + (Math.random() * 25 - 12.5))));
+      }
+    }
+    generateWaveform();
+
+    Player.initListeners = function(){
+      $rootScope.$on('$routeChangeStart', function ( event) {
+        Player.audio_el.pause();
+      });
+      $rootScope.$watch(function () { return Player.audio_el.duration }, function (duration) {
+        Player.duration = duration;
+      });
+    }
+
+    function simpleFile(filename) {
+      var file = filename;
+      if (angular.isArray(file)) {
+        file = file[0];
+      }
+      var parts = (file || '').split('/');
+      return parts[parts.length-1].split('?', 2)[0];
+    }
+
+    Player.load = function (urls,title) {
+      var el = angular.element(document.getElementById('player').querySelector('audio')),
+        html_str = '',
+        oggs = [],
+        mp3s = [];
+      urls.filter(function (url) {
+        if (url.endsWith('.ogg') === true) {
+          oggs.push(url)
+        } else {
+          mp3s.push(url)
+        }
+      });
+      this.audio_el = el.get(0);
+      if (this.audio_el.canPlayType('audio/mpeg')) {
+        html_str += '<source src=' + mp3s[0] + ' type="audio/mpeg" />'
+      }
+      if (this.audio_el.canPlayType('audio/ogg')) {
+        html_str += '<source src=' + oggs[0] + ' type="audio/ogg"/>'
+      }
+      el.append(html_str);
+      this.audio_el.setAttribute('title',title);
+      this.audio_el.addEventListener("canplay", this.initListeners);
+    };
+
+    Player.nowPlayingUrl = function () {
+      if (this.audio_el && this.audio_el.currentSrc){
+        return this.audio_el.currentSrc;
+      };
+      return null;
+    };
+
+    Player.waveform = function () {
+      return waveformData;
+    };
+
+    Player.reset = function () {
+      Player.audio_el.pause();
+      var el = angular.element(document.getElementById('player'));
+      el.empty();
+      el.append('<audio></audio>');
+    };
+
+    Player.play = function (url, title) {
+      if (typeof url === 'undefined' && !Player.nowPlaying()) {
+        Player.load([url],title);
+      } else if (typeof url != 'undefined'  && simpleFile(url[0]) != simpleFile(Player.nowPlayingUrl())) {
+        Player.reset();
+        Player.load([url],title);
+      }
+      return this.audio_el.play();
+    };
+
+    Player.nowPlaying = function () {
+      if (Player.audio_el && Player.nowPlayingUrl()) {
+        return Player.audio_el.title || simpleFile(Player.nowPlayingUrl());
+      }
+      return null;
+    };
+
+    Player.albumArt = function () {
+      return "<%= asset_path('minimark.png') %>";
+    }
+
+    Player.paused = function () {
+      return Player.audio_el.paused;
+    };
+
+    Player.pause = function () {
+      return Player.audio_el.pause();
+    };
+
+    Player.seekTo = function (position) {
+      if (adobe) {
+        var appName = cs.hostEnvironment.appName;
+        // console.log(appName);
+        if (appName === "AUDT") {
+        cs.evalScript("app.activeDocument. playheadPosition = app.activeDocument.sampleRate * " + position);
+        } else if (appName === "PPRO") {
+          // console.log(position);
+          // console.log(secsForPPRO(parseInt(position, 10)));
+          var newPosition = "qe.source.player.scrubTo('"+secsForPPRO(parseInt(position))+"')";
+          // console.log(newPosition);
+          cs.evalScript("app.enableQE()");
+          cs.evalScript("qe.source.player.startScrubbing()");
+          cs.evalScript(newPosition);
+          cs.evalScript("qe.source.player.endScrubbing()");
+        }
+      }
+      Player.audio_el.currentTime = position;
+    };
+
+    Player.rewind = function () {
+      Player.audio_el.currentTime=0;
+    };
+
+    return Player;
+  }])
+  .filter('timeCode', function () {
+    function dd(dd) {
+      if (dd < 10) {
+        return "0" + dd;
+      }
+      return dd;
+    }
+
+    function hh(seconds) {
+      return Math.floor(seconds / 3600);
+    }
+
+    function mm(seconds) {
+      return Math.floor(seconds % 3600 / 60);
+    }
+
+    function ss(seconds) {
+      return Math.floor(seconds % 3600 % 60);
+    }
+
+    return function (seconds, style) {
+      if (typeof style === 'undefined') {
+        style = "short";
+      }
+
+      var d = new Date(seconds * 1000);
+      if ((seconds > 3600 && style == "short") || style == "long") {
+        return  hh(seconds) + ":" + dd(mm(seconds)) + ":" + dd(ss(seconds));
+      } else if (style == "short") {
+        return mm(seconds) + ":" + dd(ss(seconds));
+      } else if (style == "words") {
+        var h = hh(seconds);
+        var m = mm(seconds);
+        var s = ss(seconds);
+        if (h && !m) {
+          return  h + "h";
+        } else if (h && m) {
+          return h + "h" + m + "m";
+        } else if (m && !s) {
+          return m + "m";
+        } else if (m && s) {
+          return m + "m" + s + "s";
+        } else {
+          return s + 's';
+        }
+      } else {
+        return "INVALID STYLE";
+      }
+    };
+  })
+
+  .directive("scrubber", ["Player", function (Player) {
+    return {
+      restrict: 'C',
+      template: '<canvas></canvas>',
+      replace: false,
+      link: function (scope, el, attrs) {
+        var element = el.find('canvas')[0];
+        var context = element.getContext('2d');
+        var mapped  = mapToArray(Player.waveform(), el.width());
+
+        function canvasWidth() {
+          return el.width();
+        }
+
+        function canvasHeight() {
+          return el.height();
+        }
+
+        function barTop(size, height) {
+          return Math.round((50 - size) * (height / 50) * 0.5);
+        }
+
+        function barHeight(size, height) {
+          return Math.round(size * (height / 50));
+        }
+
+        function mapToArray(waveform, size) {
+          var currentPixel = 0;
+          var currentChunk = 0;
+          var chunksPerPixel = waveform.length / size;
+          var chunkStart, chunkEnd, sum, j;
+          var array = [];
+          while (currentPixel < size) {
+            chunkStart = Math.ceil(currentChunk);
+            currentChunk += chunksPerPixel;
+            chunkEnd = Math.floor(currentChunk);
+
+            sum = 0;
+            for (j = chunkStart; j <= chunkEnd; j += 1) {
+              sum += waveform[j];
+            }
+
+            array[currentPixel] = sum / (chunkEnd - chunkStart + 1);
+            currentPixel += 1;
+          }
+          return array;
+        }
+
+        function redraw() {
+          var height = canvasHeight();
+          var width  = mapped.length;
+          element.width = width;
+          element.height = height;
+          var scrubberEnd = Math.round(width * Player.time / Player.duration) || 0;
+          context.clearRect(0, 0, width + 200, height + 200);
+          context.fillStyle = 'rgb(255, 190, 48)';
+          for (var i = 0; i < width; i++) {
+            if (i == scrubberEnd) {
+              context.fillStyle = "rgb(187, 187, 187)";
+            }
+            context.fillRect(i, barTop(mapped[i], height), 1, barHeight(mapped[i], height));
+          }
+        }
+
+        function drawScrubber(to, from) {
+          var height = canvasHeight();
+          from = Math.floor(from / Player.duration * mapped.length);
+          to   = Math.ceil(to / Player.duration * mapped.length);
+          if (to > from) {
+            context.fillStyle = 'rgb(255, 190, 48)'
+            for (var i=from; i<=to; i++) {
+              context.fillRect(i, barTop(mapped[i], height), 1, barHeight(mapped[i], height));
+            }
+          } else {
+            context.fillStyle = "rgb(187, 187, 187)";
+            for (var i=to; i<=from+1; i++) {
+              context.fillRect(i, barTop(mapped[i], height), 1, barHeight(mapped[i], height));
+            }
+          }
+        }
+
+        scope.$watch(Player.waveform, function (waveform) {
+          mapped = mapToArray(waveform, canvasWidth());
+          redraw();
+        });
+
+        var currentWidth = mapped.length, currentHeight = canvasHeight();
+        function checkWaveform () {
+          if (currentWidth != canvasWidth() || currentHeight != canvasHeight()) {
+            context.scale(currentWidth/canvasWidth(), currentHeight/canvasHeight());
+            if (currentWidth != canvasWidth()) {
+              mapped = mapToArray(Player.waveform(), canvasWidth());
+            }
+            currentWidth = canvasWidth();
+            currentHeight = canvasHeight();
+            redraw();
+          }
+        }
+
+        scope.$watch(function () { return Player.time }, drawScrubber);
+
+        scope.$watch(checkWaveform);
+        // angular.element(window).bind('resize', checkWaveform);
+
+        el.bind('click', function (e) {
+          var left = 0, element = this;
+          do {
+            left += element.offsetLeft || 0;
+            element = element.offsetParent;
+          } while(element);
+          e = getEvent(e);
+          e.stopPropagation();
+          var relativePosition = e.offsetX || (e.clientX - left);
+          var percentage = (relativePosition / el[0].offsetWidth);
+          Player.seekTo(percentage * Player.duration);
+        });
+      }
+    }
+  }])
+
+  .filter ('round', function() {
+    return function(input) {
+      return Math.round(input);
+    };
+  })
+
+  .directive("transcript", ['Player','$parse','$timeout', 'Contribution', 'Speaker', '$filter', '$sce', function (Player, $parse, $timeout, Contribution, Speaker, $filter, $sce) {
+    return {
+      restrict: 'C',
+      replace: true,
+      scope: {
+        transcript: "=transcriptText",
+        transcriptType: "=transcriptType",
+        speakers: "=speakers",
+        canEdit: "=transcriptEditable",
+        transcriptTimestamps: "@",
+        currentTime: "=",
+        fileUrl: "=",
+        autoScroll: "=",
+        saveText: "&",
+        transcriptFilter: "=ngModel",
+        item: "=item",
+        context: "@"
+      },
+      priority: -1000,
+      template: '<div class="file-transcript" contenteditable="{{isContentEditable()}}" spellcheck="false" ng-shift-tab="replayCurrent()" ng-tab="playerPausePlay()" ng-enter="playerPausePlay()">' +
+
+        '<div class="segment" ng-repeat="text in transcript track by $index" ng-init="chunk=newChunk(transcript[$index-1].speakerId, text.speakerId, $index); texttml=wordSpans(text, $index)" ng-class="{current: isPlaying(text.startTime), played: isPlayed(text.startTime), newParagraph: chunk, result: context == \'result\'}">' +
+
+        '<div ng-if="(transcriptType != \'Basic\' && chunk) || transcriptFilter.length > 0" contenteditable="false" class="time-and-speaker" data-index="{{$index}}" data-speaker="{{text.speakerId}}">' +
+          '<div once-if="showStart">{{toTimestamp(text.startTime)}}</div>' +
+          '<div class="timestamp" once-if="showRange">{{toTimestamp(text.startTime)}}</div>' +
+          '<div class="speaker" ng-if="!isContentEditable()" ng-bind="transcriptFilter.length > 0 ? assignSpeaker(text.speakerId) : speakerChange(transcript[$index-1].speakerId, text.speakerId)"></div>' +
+          '<a bs-popover ng-if="isContentEditable() && transcriptType != \'Basic\'" data-template="<%= asset_path 'items/speaker_picker.html' %>" data-placement="right" data-unique="1">' +
+            '<span class="newspeaker" ng-bind="assignSpeaker(text.speakerId)" once-if=chunk></span>' +
+            '<i class="icon-chevron-down"></i>' +
+          ' </a>' +
+        '</div>' +
+
+          '<div once-if="transcriptType == \'Basic\' && newChunk(nil, nil, $index)" class="newParagraph" contenteditable="{{canEdit}}">' +
+            '<div contenteditable="false" class="time-and-speaker" data-index="{{$index}}">' +
+              '<div once-if="showStart">{{toTimestamp(text.startTime)}}</div>' +
+              '<div class="timestamp" once-if="showRange">{{toTimestamp(text.startTime)}}</div>' +
+            '</div>' +
+          '</div>' +
+
+          '<div ng-if="isContentEditable() && !isEmpty(text.text)" class="file-transcript-text editor" ng-click="seekTo(text.startTime)" id="{{text.id}}" data-ttid="{{text.id}}" data-uid="{{$index}}"  once-html=texttml></div>' +
+
+          '<div ng-if="!isContentEditable()" id="{{text.id}}" class="file-transcript-text" ng-click="seekTo(text.startTime)" data-uid="{{$index}}" ng-bind-html="text.text + \' \' | highlight:transcriptFilter "></div>' +
+
+        '</div>' +
+      '</div>',
+      link: function (scope, el, attrs) {
+        scope.deletedNodes = [];
+        scope.editorEnabled = (scope.context != 'result');
+        scope.isContentEditable = function() {
+          var canEdit = scope.canEdit && !scope.transcriptFilter && scope.context != 'result'
+          if(!canEdit && scope.editorEnabled && scope.observer){
+            console.log("disable observer");
+            scope.observer.disconnect();
+            scope.editorEnabled = false;
+          } else if(canEdit && !scope.editorEnabled) {
+            scope.$evalAsync(function() {
+              console.log("enable observer");
+              scope.observer.observe(el[0], {childList: true, subtree: true, characterData: true,
+               characterDataOldValue: true});
+              scope.editorEnabled = true;
+            });
+          }
+          return canEdit;
+        }
+        scope.isPlayed = function(textStart){
+          return scope.transcriptStart > Math.round(textStart);
+        }
+        scope.isPlaying = function (textStart){
+          return scope.transcriptStart == Math.round(textStart);
+        }
+        scope.$evalAsync(function() {
+          var MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
+          if( MutationObserver ) {
+            var observerConfig = {childList: true, subtree: true, characterData: true, characterDataOldValue: true};
+            scope.observer = new MutationObserver(function(mutations) {
+              mutations.forEach(function(mutation) {
+                // console.log(mutation);
+                if (mutation.type == "characterData"){
+                  console.log("characterData ", mutation);
+                  var el = mutation.target.parentElement.dataset.position ? mutation.target.parentElement : mutation.target.parentElement.parentElement;
+                  var ttid = el.dataset.ttid;
+                  var uid = el.dataset.uid;
+                  if (el.dataset.last && !(/\s/.test(mutation.target.textContent.slice(-1)))){
+                    console.log("last space in sentence deleted", mutation);
+                    var siblingId = parseInt(uid) + 1;
+                    var ts = scope.transcript;
+                    var sibTt = ts[siblingId];
+                    if (sibTt) {
+                      //skip if the last line in the document
+                      var siblingEls =  angular.element(document.getElementsByClassName( sibTt.id ));
+                      var siblingEl = siblingEls[0];
+                    }
+                    if (siblingEl){
+                      //move caret to prev sibling unless no siblings with id are found
+                      var textContent = el.innerText + siblingEl.innerText;
+                      var offset=el.innerText.length;
+                      el.innerText = textContent;
+                      scope.findAndSaveChanges(sibTt.id, siblingId);
+                      siblingEl.remove();
+                      moveCaret(ttid, offset);
+                      scope.updatePosition(siblingId);
+                    }
+                  }
+                  scope.findAndSaveChanges(ttid, uid);
+                } else if (mutation.type == "childList"  && mutation.removedNodes[0] && mutation.removedNodes[0].dataset && (mutation.removedNodes[0].classList.contains("time-and-speaker") || mutation.removedNodes[0].classList.contains("newParagraph"))) {
+                  //Watches for deletion of speakers and updates speaker info
+                  console.log("removed node time and speaker", mutation);
+                  var node = mutation.removedNodes[0].dataset.speaker ? mutation.removedNodes[0] : mutation.removedNodes[0].childNodes[0];
+                  var originalSpeaker = node.dataset.speaker;
+                  var index = node.dataset.index;
+                  scope.updateSpeaker(parseInt(originalSpeaker), parseInt(index));
+                } else if (mutation.type == "childList"  && mutation.removedNodes[0] && mutation.addedNodes.length == 0 && mutation.target.classList.contains("file-transcript-text") && mutation.removedNodes[0].nodeName != '#comment' &&   !mutation.target.classList.contains("newspeaker") && !mutation.removedNodes[0].classList.contains("popover")) {
+                  console.log("removedNode file transcript text: ", mutation);
+                  var ttid = mutation.removedNodes[0].dataset.ttid;
+                  var uid = mutation.removedNodes[0].dataset.uid;
+                  scope.updatePosition(ttid);
+                  scope.findAndSaveChanges(ttid, uid);
+                }
+              })
+            });
+            scope.observer.observe(el[0], observerConfig);
+          }
+        });
+
+        var lastSecond = -1;
+
+        scope.player = Player;
+        scope.firstPlay = true;
+
+        scope.transcriptStart = 0;
+
+        //warn user of unsaved changes
+        window.onbeforeunload = function() {
+          if (Object.keys(scope.pendingChanges).length) {
+            return "You have unsaved changes!";
+          }
+        };
+
+        el.bind("keydown", function(e) {
+          var sel = getSelection();
+          // Prevent delete if it contains whitespace
+          if (sel.type == "Range" && sel.toString().match(/\s/)) {
+            e.preventDefault();
+            var range = document.createRange();
+            range.setStart(sel.anchorNode, sel.anchorOffset);
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
+            alert("Please only delete one word at a time in order to maintain time alignment");
+          }
+        });
+
+        scope.wordSpans = function(text, uid) {
+          var words = text.text.split(' ');
+          var spans = words.map(function(word, index) {
+            if (index != words.length-1) {
+              return '<span data-speaker='+text.speakerId+' data-ttid='+text.id+' data-position='+index+' data-uid='+uid+' class="' +text.id+' word">' + word + ' </span>'
+            } else {
+              return '<span data-speaker='+text.speakerId+' data-ttid='+text.id+' data-position='+index+' data-uid='+uid+' data-last=true class="' +text.id+' word">' + word + '&nbsp</span>'
+            }
+          });
+          return spans.join('');
+        };
+
+        // create lookup of row index by timestamp
+        scope.transcriptRows = function() {
+          var rows = {};
+          angular.forEach(scope.transcript, function(row, index) {
+            rows[Math.round(row.startTime)] = index;
+          });
+          return rows;
+        }();
+        scope.transcriptTimestamps = scope.transcriptTimestamps || 'range';
+        scope.pendingChanges = {};
+
+        function moveCaret(startNodeId, startOffset) {
+          var range = document.createRange(),
+              sel = window.getSelection(),
+              el = document.getElementById( startNodeId ).lastElementChild;
+          range.setStart(el.childNodes[0], startOffset);
+          range.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(range);
+          el.focus();
+        }
+
+        function getSelection() {
+          var sel;
+          if (typeof window.getSelection != "undefined") {
+            sel = window.getSelection();
+          }
+          return sel
+        }
+
+        scope.replayCurrent = function() {
+          $timeout(function() {
+            angular.element(".current .file-transcript-text").triggerHandler("click");
+            scope.player.play();
+          })
+        }
+
+        scope.isEmpty = function(text) {
+          return (text.length === 0 || !text.trim());
+        }
+
+        scope.findAndSaveChanges = function(ttid, idx) {
+          var el =  angular.element(document.getElementById( ttid ));
+          var text = el[0] ? el[0].innerText : "";
+          console.log("findAndSaveChanges:", ttid, idx, text);
+          var ts = scope.transcript;
+          var tt = ts[idx];
+          var newText = text.trim()
+          if (tt.text != newText) {
+            scope.pendingPromise(idx, tt.id);
+            // Delay update for 5 seconds and then delete the tt.id from the pendingChanges object
+            scope.pendingChanges[tt.id] = $timeout(function() {
+              scope.updateText(idx, tt.id, newText);
+            }, 5000);
+          }
+        };
+
+        scope.updatePosition = function(ttid) {
+          var els =  angular.element(document.getElementsByClassName( ttid ));
+          els.map(function(index, el) {
+            el.setAttribute('data-position',index);
+          });
+        };
+
+        scope.saveAllChanges = function() {
+          var ts = scope.transcript;
+          var segments = el.children();
+          var updating = 0;
+          for (var i = 0, len = ts.length; i < len; i++) {
+            var tt = ts[i];
+            var segment = angular.element(segments[i]).find(".file-transcript-text");
+            if (!segment[0]){continue;}
+            var text = segment[0].innerText;
+            var currentText = text ? text.replace(/^(&nbsp;)/,"").trim() : "";
+            if (tt.text != currentText) {
+              scope.updateText(i, tt.id, currentText);
+              updating ++;
+            }
+            if (updating == 0){
+              // if there's nothing to save show "saved" alert
+              $("#saved-transcript").show().delay(3000).fadeOut(4000);
+            }
+          }
+        };
+
+        scope.pendingPromise = function (idx, tt_id) {
+          // Cancel the promise for the previous tt change if there is a new one
+          if (scope.pendingChanges[tt_id]) {
+            var pendingPromise = scope.pendingChanges[tt_id];
+            $timeout.cancel(pendingPromise);
+          }
+        };
+
+        scope.updateText = function (tsIdx, ttId, text) {
+          var textEntry = angular.copy(scope.transcript[tsIdx]);
+          if (scope.deletedNodes.includes(ttId)){
+            scope.updatePromise(tsIdx, textEntry, null);
+          } else {
+            console.log("Update text", tsIdx, ttId);
+            var segments = el.children();
+            var newText = !scope.isEmpty(text) ? text.replace(/^(&nbsp;)/,"").replace(/(&nbsp;)$/,"").replace(/<font color=\"#333333\">&nbsp;<\/font>/," ").trim() : "";
+            scope.updatePromise(tsIdx, textEntry, newText);
+          }
+        };
+
+        scope.updatePromise = function (tsIdx, textEntry, newText) {
+          var ttId = textEntry.id;
+          var newText = newText ? newText : "";
+          textEntry.text = newText;
+          var updatePromise = this.saveText({text: textEntry});
+          updatePromise.then(function(response) {
+            // save the new text in the scope and delete the entry in the pendingChanges object
+            console.log("Update promise", tsIdx, textEntry, newText);
+            $timeout(function() {
+              $("#saved-transcript").show().delay(3000).fadeOut(4000);
+              scope.transcript[tsIdx].text = newText;
+              delete scope.pendingChanges[ttId];
+            })
+          }, function(response) {
+            $("#error-transcript").show().delay(5000).fadeOut(4000);
+          });
+        };
+
+        if (scope.transcriptTimestamps == 'range') {
+          scope.showRange = true;
+          scope.showStart = false;
+        } else if (scope.transcriptTimestamps = 'start') {
+          scope.showStart = true;
+          scope.showRange = false;
+        };
+
+        scope.$emit('HideMask');
+
+        scope.$on('CallSave', function() {
+          scope.saveAllChanges(false);
+        });
+
+        scope.playerPausePlay = function() {
+          if (scope.player.paused()){
+            scope.player.play();
+          } else {
+            scope.player.pause();
+          };
+        };
+
+        scope.toTimestamp = function (seconds) {
+          var d = new Date(seconds * 1000);
+          var round = function(num, places)
+            {
+              return Math.round(num * 100) / 100
+            }
+          if (seconds > 3600) {
+            return Math.floor(seconds / 3600) + ":" + dd(Math.floor(seconds % 3600 / 60)) + ":" + dd(round(seconds % 3600 % 60));
+          } else {
+            return Math.floor(seconds / 60) + ":" + dd(round(seconds % 60));
+          }
+        }
+
+        var dd = function (dd) {
+          if (dd < 10) {
+            return "0" + dd;
+          }
+          return dd;
+        }
+
+        scope.seekTo = function (time) {
+          scope.$emit('transcriptSeek', time, scope.context);
+        }
+
+        //replace speaker ids with speaker names
+        scope.assignSpeaker = function (speakerId) {
+          if(speakerId){
+            var speakers = scope.speakers;
+            for(var i in speakers){
+              if(speakers[i].id == speakerId) {
+                return speakers[i].name;
+                break;
+              }
+            }
+          }
+        }
+
+        //only show speaker if different from the previous speaker
+        scope.speakerChange = function (previousSpeaker, currentSpeaker) {
+          if (currentSpeaker != previousSpeaker) {
+            var name = scope.assignSpeaker(currentSpeaker) || "";
+            return name;
+          }
+        }
+        scope.newChunk = function (previousSpeaker, currentSpeaker, idx) {
+          if (scope.context == "result" || scope.transcriptFilter) {return true;}
+          if (!previousSpeaker && !currentSpeaker) {
+            if (idx % 7 == 0) {
+              return true;
+            } else {
+              return false;
+            }
+          }
+          if (currentSpeaker != previousSpeaker) {
+            return true;
+          } else {
+            return false;
+          }
+        }
+
+        //update the speaker id of a given line(s) of transcript
+        scope.updateSpeaker = function (originalSpeaker, index) {
+          // console.log("updateSpeaker ", originalSpeaker, index);
+          var newSpeakerId = scope.transcript[index - 1].speakerId
+          var text = scope.transcript[index]
+          if (newSpeakerId) {
+            text.speakerId = newSpeakerId;
+          }
+          // console.log(text);
+          this.saveText({text: text});
+          //checks to see if the next line of text has the same speaker, if yes updates that speaker as well
+          index=index+1;
+          if (index < scope.transcript.length && scope.transcript[index].speakerId == originalSpeaker) {
+            var text = scope.transcript[index];
+            text.speakerId = newSpeakerId;
+            scope.updateSpeaker(originalSpeaker, index, newSpeakerId);
+          }
+        };
+
+        scope.updateSpeakerName = function(contribution, speakerId) {
+          var speaker = new Speaker({id: speakerId, name: contribution.person.name});
+          speaker.update();
+          for (var i=0;i<scope.speakers.length;i++) {
+            if (scope.speakers[i].id === speaker.id) {
+              scope.speakers[i].name = speaker.name;
+            }
+          };
+        };
+
+        scope.addContribution = function(contribution, speakerId) {
+          // Create new contribution for a new person and add to item.contributions
+          if (!contribution.id) {
+            var c = new Contribution(contribution);
+            if (!scope.item.contributions) {
+              scope.item.contributions = [];
+            }
+            scope.item.contributions.push(c);
+            scope.item.updateContributions();
+          }
+          // Update speaker name and change it in scope
+          scope.updateSpeakerName(contribution, speakerId)
+        };
+
+        function extractFilename(filename){
+          if (filename){
+            return filename.substr(0, filename.lastIndexOf('.')) || filename;
+          }
+        }
+
+        if (scope.transcript && scope.transcript.length > 0) {
+          scope.$watch('currentTime', function (time) {
+            if (scope.autoScroll) {
+              var second = parseInt(time, 10),
+                  height = angular.element(".file-transcript div")[0].scrollHeight;
+              if (second != lastSecond) {
+                var playingUrl=extractFilename(scope.player.nowPlayingUrl()),
+                    scopedUrl=extractFilename(scope.fileUrl[0]);
+                if ((playingUrl==scopedUrl) && (second in scope.transcriptRows)) {
+                  var index = scope.transcriptRows[second];
+                  if (index) {
+                    // Disable autoscroll for now
+                    // el[0].scrollTop = Math.max((index - 1), 0) * height;
+                    scope.transcriptStart = second;
+                  }
+                }
+                var lastSecond = second;
+              }
+            }
+          });
+        }
+
+      }
+    }
+  }]);
+})();

@@ -1,0 +1,108 @@
+doctype html
+html lang='en' ng-app='Directory' ng-controller='DirectoryCtrl'
+  head
+    meta charset='utf-8'
+    meta name="fragment" content="!"
+    meta name="viewport" content="width=device-width, initial-scale=1"
+    title ng-bind-template="{{viewTitle ? viewTitle + ' - Pop Up Archive' : 'Pop Up Archive - Machine transcription turns audio to text in minutes'}}" Pop Up Archive - Machine transcription turns audio to text in minutes
+    meta name="description" content="{{metaDescription()}}"
+    meta property="og:site_name" content="Pop Up Archive"
+    meta name="referrer" content="always"
+
+    = stylesheet_link_tag 'bootstrap.min', media: 'all'
+    = stylesheet_link_tag 'bootstrap-theme.min.css', media: 'all'
+    = stylesheet_link_tag 'directory/base', media: 'all'
+    link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css"
+    link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"
+    - if session[:adobe]
+      = javascript_include_tag 'adobe/CSInterface'
+      javascript:
+        window.adobe = true;
+        var cs = new CSInterface();
+    = javascript_include_tag 'directory/application'
+    = javascript_include_tag 'https://js.stripe.com/v2/'
+    = csrf_meta_tags
+
+    <!-- Start Visual Website Optimizer Synchronous Code -->
+    javascript:
+      var _vis_opt_account_id = 79417;
+      var _vis_opt_protocol = (('https:' == document.location.protocol) ? 'https://' : 'http://');
+      document.write('<s' + 'cript src="' + _vis_opt_protocol +
+      'dev.visualwebsiteoptimizer.com/deploy/js_visitor_settings.php?v=1&a='+_vis_opt_account_id+'&url='
+      +encodeURIComponent(document.URL)+'&random='+Math.random()+'" type="text/javascript">' + '<\/s' + 'cript>');
+
+    javascript:
+      if(typeof(_vis_opt_settings_loaded) == "boolean") { document.write('<s' + 'cript src="' + _vis_opt_protocol +
+      'd5phz18u4wuww.cloudfront.net/vis_opt_no_jquery.js" type="text/javascript">' + '<\/s' + 'cript>'); }
+      // if your site already has jQuery 1.4.2, replace vis_opt.js with vis_opt_no_jquery.js above
+
+    javascript:
+      if(typeof(_vis_opt_settings_loaded) == "boolean" && typeof(_vis_opt_top_initialize) == "function") {
+        _vis_opt_top_initialize(); vwo_$(document).ready(function() { _vis_opt_bottom_initialize(); });
+      }
+    <!-- End Visual Website Optimizer Synchronous Code -->
+
+    javascript:
+      var _vis_opt_queue = window._vis_opt_queue || [], _vis_counter = 0, mixpanel = window.mixpanel || [];
+      _vis_opt_queue.push(function() {
+        try {
+          if(!_vis_counter) {
+            var _vis_data = {},_vis_combination,_vis_id,_vis_l=0;
+            for(;_vis_l<_vwo_exp_ids.length;_vis_l++) {
+              _vis_id = _vwo_exp_ids[_vis_l];
+              if(_vwo_exp[_vis_id].ready) {
+                _vis_combination = _vis_opt_readCookie('_vis_opt_exp_'+_vis_id+'_combi');
+                if(typeof(_vwo_exp[_vis_id].combination_chosen) != "undefined")
+                  _vis_combination = _vwo_exp[_vis_id].combination_chosen;
+                if(typeof(_vwo_exp[_vis_id].comb_n[_vis_combination]) != "undefined") {
+                  _vis_data['VWO-Test-ID-'+_vis_id] = _vwo_exp[_vis_id].comb_n[_vis_combination];
+                  _vis_counter++;
+                }
+              }
+            }
+            // Use the _vis_data object created above to fetch the data, 
+            // key of the object is the Test ID and the value is Variation Name
+            if(_vis_counter) mixpanel.push(['register_once', _vis_data]);
+          }
+        }
+        catch(err) {};
+      });
+    
+    //mixpanel
+    
+    script(type="text/javascript")(function(e,b){if(!b.__SV){var a,f,i,g;window.mixpanel=b;b._i=[];b.init=function(a,e,d){function f(b,h){var a=h.split(".");2==a.length&&(b=b[a[0]],h=a[1]);b[h]=function(){b.push([h].concat(Array.prototype.slice.call(arguments,0)))}}var c=b;"undefined"!==typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var a="mixpanel";"mixpanel"!==d&&(a+="."+d);b||(a+=" (stub)");return a};c.people.toString=function(){return c.toString(1)+".people (stub)"};i="disable track track_pageview track_links track_forms register register_once alias unregister identify name_tag set_config people.set people.set_once people.increment people.append people.track_charge people.clear_charges people.delete_user".split(" "); for(g=0;g<i.length;g++)f(c,i[g]);b._i.push([a,e,d])};b.__SV=1.2;a=e.createElement("script");a.type="text/javascript";a.async=!0;a.src=("https:"===e.location.protocol?"https:":"http:")+'//cdn.mxpnl.com/libs/mixpanel-2.2.min.js';f=e.getElementsByTagName("script")[0];f.parentNode.insertBefore(a,f)}})(document,window.mixpanel||[]); mixpanel.init("#{ENV['MIXPANEL_PROJECT']}", {'loaded':function() {var distinct_id = mixpanel.get_distinct_id()}});
+
+  body ng-controller="FilesCtrl" file-dropzone="files" class=(user_signed_in? ? 'authn' : '') ng-class="{'over-monthly-limit': currentUser.overMonthlyLimit || (currentUser.trialEnded && !currentUser.hasCard)}"
+    div loading-mask=""
+    header= render(user_signed_in? ? 'authn_header' : 'header')
+    .container
+      messages= render('messages')
+      ng-view
+            
+    footer= render(user_signed_in? ? 'authn_footer' : 'footer')
+    
+    =render('contact')
+
+    script#pending-action type='text/ng-template'
+      a ng-href='{{action.path}}' ng-click="removeAction($index)" {{action.message}}
+      .progress.progress-striped.active
+        .bar ng-style="{width:action.progress+'%'}"
+
+    script(type='text/javascript' src='//use.typekit.net/kcl6vml.js')
+    script(type='text/javascript') try{Typekit.load();}catch(e){}
+    script(type='text/javascript') window.prerenderReady = false;
+    
+    / div#getsat-widget-5439
+    / script(type="text/javascript" src="//loader.engage.gsfn.us/loader.js")
+    / script(type="text/javascript") if (typeof GSFN !== "undefined"){ GSFN.loadWidget(5439,{"containerId":"getsat-widget-5439"});}
+
+    //twitter
+
+    script src="//platform.twitter.com/oct.js" type="text/javascript" 
+    javascript:
+      twttr.conversion.trackPid('l4w6x');
+    noscript
+      img alt="" height="1" src="https://analytics.twitter.com/i/adsct?txn_id=l4w6x&p_id=Twitter" style="display:none;" width="1" /
+      img alt="" height="1" src="//t.co/i/adsct?txn_id=l4w6x&p_id=Twitter" style="display:none;" width="1" /
+    //Twitter share button
+    script src="https://platform.twitter.com/widgets.js"

@@ -1,0 +1,119 @@
+.browse_results
+  #explorewell
+    div.featuredcol
+    .row.main-featured  ng-hide="newView" 
+      h2.center 
+        |Featured: 
+        a href="/collections/4425" Popcast
+        |, the new podcast from Pop Up Archive
+      .col-sm-12
+        .col-sm-4 style='text-align: center;'
+          a href='/collections/4425' 
+            img.expimg-main src="#{asset_path('explore/pocast-300x200.png')}"
+        /   
+        div.explore-main
+          | Like found sound? In 
+          a href="/collections/4425" Popcast
+          |, Pop Up Archive's house podcast, Eliza Smith excavates audio from Pop Up Archive's public collections, from recordings on wax cylinder to NASA's interstellar rumbles. Listen to Smith resurface and reexamine forgotten sounds in this series of intimate micro-podcasts.
+    h3 ng-hide="newView" Archival Voices
+    .row ng-hide="newView"
+      .col-sm-12
+        .col-sm-4
+          a href='/collections/938'
+            img.expimg src="#{asset_path('explore/terkel.jpg')}"
+            h5 Studs Terkel Radio Archive
+          p.explorep 
+            | Radio legend, famed author, and oral historian Studs Terkel spent 45 years on air with WFMT radio leading probing talks with people from all walks of life. 
+            a href="/collections/938/items/6920" Maya Angelou
+            |, 
+            a href="/collections/938/items/6907" Buster Keaton
+            |, 
+            a href="/collections/938/items/6927" Peter Sellers
+            |, and 
+            a href="/collections/938/items/22370" London cab drivers
+            |  count among his thousands of interviewees.
+        .col-sm-4
+          a href='/collections/925'
+            img.expimg src="#{asset_path('explore/pacifica.jpg')}"
+            h5 Pacifica Radio Archives
+          p.explorep 
+            | Pacifica's world renowned archives include collections such as "American Women Making History and Culture"
+            | , featuring interviewees like 
+            a href="/collections/925/items/6820"Yoko Ono
+            |  and 
+            a href="/collections/925/items/6810" Anais Nin
+            | , and 
+            a href="/collections/1686" Pacifica Grammy
+            | , featuring digitized radio dramas and rare concerts from the 1960s and 1970s.
+        .col-sm-4
+          a href='/collections/583' 
+            img.expimg src="#{asset_path('explore/WILL.jpg')}"
+            h5 Illinois Public Radio
+          p.explorep  
+            | Illinois Public Radio, public broadcasting for central Illinois, captured the voices from inside America's biggest social movements of the 20th century. Listen to the original rhetoric that drove 
+            a href="/search?page=1&sortBy=_score&sortOrder=desc&query=%22African%20American%20Civil%20Rights%22" civil rights
+            |, 
+            a href="/search?page=1&sortBy=date_added&sortOrder=desc&query=%22Women%27s%20Rights%22,collection_id:%22583-Illinois%20Public%20Media%22" second-wave feminism
+            |, and reform and equality in 
+            a href="/search?page=1&sortBy=date_added&sortOrder=desc&query=collection_id:%22583-Illinois%20Public%20Media%22,tag:%22Public%20Education%22" education
+            |.
+    h3 ng-hide="newView" New Voices 
+    .row ng-hide="newView"
+      .col-sm-12
+        .col-sm-4
+          a href='/collections/3247'
+            img.expimg src="#{asset_path('explore/kqed-space.png')}"
+            h5 KQED Science
+          p.explorep 
+            | Award-winning science and environment coverage from KQED, Northern California Public Media. Regularly updated with new topics exploring everything from 
+            a href="/collections/3247/items/19543" robotic squirrels
+            |  to 
+            a href="/collections/3247/items/28375" energy policy
+            | . 
+        .col-sm-4
+          a href='/collections/1754'
+            img.expimg src="#{asset_path('explore/99percentinvisible_cut.jpg')}"
+            h5 99% Invisible 
+          p.explorep 
+            | A tiny radio show about design, architecture & the 99% invisible activity that shapes our world. Founding member of the award-winning collective for audio storytellers, 
+            a href="http://www.radiotopia.fm/"  Radiotopia
+            |. Find all Radiotopia shows, from 
+            a href="/collections/1573" Love + Radio
+            |  to
+            a href="/collections/801"  Radio Diaries
+            | , on Pop Up Archive.
+        .col-sm-4
+          a href='/collections/2064'
+            img.expimg src="#{asset_path('explore/kalw_cut.jpg')}"
+            h5 KALW Crosscurrents
+          p.explorep 
+            | A daily news show from KALW Public Radio in San Francisco, reporting local news from all around the Bay Area. Listen to in-depth regional reports alongside offbeat public interest stories, with features like,
+            a href="/search?page=1&query=collection_id:%222064-KALW%27s%20Crosscurrents%22,%2260-Second%20Fiction%22"  60-Second Fiction
+            |  and the 
+            a href="/search?page=1&query=collection_id:%222064-KALW%27s%20Crosscurrents%22,Audiograph" Audiograph
+            |  sound of the week.
+
+  .row ng-hide="newView"
+    h3 Browse by Category
+    .col-md-4.top-terms ng-repeat="facet in search.facetsAsObjects()" ng-show="facet.visible()"
+      h4() {{facet.name | lowercase}}
+      ul ng-controller="SearchCtrl" ng-submit="query.commit()"
+        li ng-repeat="entry in facet.entries()"
+          small.pull-right() ({{entry.count}})
+          p ng-click="addSearchFilter(entry)" {{entry.nameForPresenting()}}
+        li
+          a ng-click="setQuery({field: facet.name, letter: 'a'}); toggleView()"  More...
+  .container ng-show="newView"   
+    .row
+      .col-md-12
+        .browse
+          ul#letters
+            li ng-repeat="letter in letters"
+              a ng-click="setQuery({letter: letter})" {{letter}} 
+          h4() {{title_term | lowercase}}
+          a ng-click="toggleView()" Back to All Facets 
+    .row 
+      .results
+        .col-md-4 ng-repeat="term in terms | unique: 'key'"
+          ul
+            li ng-click="termSearch({field: field, term: term.key})" {{term.key}} ({{term.doc_count}})

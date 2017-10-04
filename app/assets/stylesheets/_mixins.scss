@@ -1,0 +1,102 @@
+/* mixins */
+
+@mixin animation($animation...) {
+  -o-animation: $animation;
+  -moz-animation: $animation;
+  -webkit-animation: $animation;
+  animation: $animation;
+}
+
+@mixin animation-delay($time){  
+	animation-delay:         $time;
+	-o-animation-delay:      $time;
+	-ms-animation-delay:     $time;
+	-moz-animation-delay:    $time;
+	-webkit-animation-delay: $time;
+}
+
+@mixin border-radius($radius) {
+  -webkit-border-radius: $radius;
+     -moz-border-radius: $radius;
+      -ms-border-radius: $radius;
+          border-radius: $radius;
+}
+
+@mixin keyframes($animation-name) {
+  @-webkit-keyframes $animation-name {
+    @content;
+  }
+  @-moz-keyframes $animation-name {
+    @content;
+  }  
+  @-ms-keyframes $animation-name {
+    @content;
+  }
+  @-o-keyframes $animation-name {
+    @content;
+  }  
+  @keyframes $animation-name {
+    @content;
+  }
+}
+
+@mixin transition($transition-property, $transition-time, $method, $delay:"") {
+    -webkit-transition: $transition-property $transition-time $method #{$delay};
+    -moz-transition: $transition-property $transition-time $method #{$delay};
+    -ms-transition: $transition-property $transition-time $method #{$delay};
+    -o-transition: $transition-property $transition-time $method #{$delay};
+    transition: $transition-property $transition-time $method #{$delay};
+}
+
+@mixin transform($trans-type) {
+  transform:         $trans-type;
+  -o-transform:      $trans-type;  
+  -ms-transform:     $trans-type;
+  -moz-transform:    $trans-type;
+  -webkit-transform: $trans-type;
+}
+
+@mixin vertical-center {
+    position: relative;
+    top: 50%;
+    -webkit-transform: translateY(-50%);
+    -ms-transform: translateY(-50%);
+    transform: translateY(-50%);
+}
+
+// Boostrap inspired breakpoints
+@mixin desktop {
+  @media (min-width: 992px) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (max-width: 767px) {
+    @content;
+  }
+}
+
+@mixin tablet-plus {
+	@media (max-width: 991px) {
+		@content;
+	}
+}
+
+@mixin not-mobile {
+	@media (min-width: 481px) {
+		@content;
+	}
+}
+
+@mixin mobile {
+  @media (max-width: 480px) {
+    @content;
+  }
+}
+
+@mixin fill-span {
+  display: block;
+  float: none;
+  width: auto;
+}

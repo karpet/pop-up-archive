@@ -1,0 +1,37 @@
+.row
+  .col-md-11 
+      div class="newimportdiv"
+				h1 style="color:#997067" drag and drop anywhere or select a spreadsheet:
+
+      p
+        form.import ng-controller='FSImportCtrl'
+          fieldset 
+            span file-button="" style='margin-right: 4px;'
+              button.btn.btn-default Choose spreadsheet
+
+            ul ng-show='files.length > 0'
+              li ng-repeat="file in files" {{file.name}}
+
+            button.btn.btn-success ng-show='files.length > 0' ng-click='submit()' Import
+			
+			h2 style="color:#5970B1;" what kind of spreadsheet, you ask? 
+			
+			p First of all, make sure it's .csv format!
+			
+			p Each row of your spreadsheet will create one item in Pop Up Archive. Use columns to add titles, dates, comma-separated tags, or other details.
+			
+			p 
+				| Need a template spreadsheet to get you started?
+				a style="color:#5970B1;" ng-href="https://docs.google.com/spreadsheet/pub?key=0AtWrmSCFjFb2dHJoY2V2eGxiRHktM0sxQ1dlQXNwNVE&output=csv" target="blank"  Here you go. 
+				| We've seeded it with some examples &mdash; replace them.
+				
+			ul
+				li If you have files stored on Dropbox, Box.com, or another server, save time by putting direct links to the audio files in your spreadsheet. We'll transcribe the audio as soon as the import is complete. 
+				li No links to files? You can add audio files to your newly-created items after the import.
+				li If you want multiple values (like two interviewers), use two columns.
+				li
+				  a style="color:#5970B1;" bs-modal="modal" data-template="#{asset_path 'imports/field_descriptions.html'}" Click here for definitions for the Pop Up descriptive fields.
+		
+      p
+        | Want some help?
+        a style="color:#5970B1;" href='mailto:edison@popuparchive.org'  Contact us.

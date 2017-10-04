@@ -1,0 +1,238 @@
+angular.module('Directory.searches.controllers', ['Directory.loader', 'Directory.searches.models', 'Directory.searches.filters', 'Directory.collections.models', 'prxSearch', 'ngRoute', 'ngSanitize'])
+.controller('SearchCtrl', ['$scope', '$location', 'Query', function ($scope, $location, Query) {
+  $scope.location = $location;
+  $scope.$watch('location.search().query', function (search) {
+    $scope.query = new Query(search);
+  });
+}])
+.controller('GlobalSearchCtrl', ['$scope', 'Query', '$location', function ($scope, Query, $location) {
+  $scope.query = new Query();
+  $scope.go = function () {
+    $location.path('/search');
+    $scope.query.commit();
+    $scope.query = new Query();
+  }
+}])
+.controller('SearchResultsCtrl', ['$scope', 'Search', 'Loader', '$location', '$routeParams', 'Query', 'Collection', 'SearchResults', '$http', '$window', '$parse', function ($scope, Search, Loader, $location, $routeParams, Query, Collection, SearchResults, $http, $window, $parse) {
+  $scope.location = $location;
+
+  $scope.$watch('location.search().query', function (searchquery) {
+    $scope.query = new Query(searchquery);
+    fetchPage();
+    //Display the correct Sort Option. Recency for empty queries and relevancy for all others.
+    if (searchquery) {
+      $scope.selectedSort = $scope.sortOptions[0];
+    }
+    else {
+      // pick the correct initial sortOption
+      if ($location.search().sortBy) {
+        $.each($scope.sortOptions, function(idx, opt) {
+          if (opt.sort_by == $location.search().sortBy && opt.sort_order == $location.search().sortOrder) {
+            $scope.selectedSort = opt;
+            return false; // break loop
+          }
+        });
+      }
+      else {
+        $scope.selectedSort = $scope.sortOptions[1];
+      }
+    }
+  });
+
+  $scope.defaultMiniMarkImage = '<%= asset_path("minimark.png") %>';
+
+  $scope.sortOptions = [
+    {name: "Relevancy", sort_by: "_score", sort_order: "desc"},
+    {name: "Newest Added to Oldest Added", sort_by: "date_added", sort_order: "desc"},
+    {name: "Oldest Added to Newest Added", sort_by: "date_added", sort_order: "asc"},
+    {name: "Newest Created to Oldest Created", sort_by: "date_created", sort_order: "desc"},
+    {name: "Oldest Created to Newest Created", sort_by: "date_created", sort_order: "asc"},
+    {name: "Title, A-Z", sort_by: "title_sort", sort_order: "asc"},
+    {name: "Title, Z-A", sort_by: "title_sort", sort_order: "desc"}
+  ];
+
+  $scope.sortResults = function (args) {
+    $location.search('sortBy', args.sort_by);
+    $location.search('sortOrder', args.sort_order);
+    $scope.$on('$locationChangeSuccess', function () {
+        fetchPage();
+    });
+  };
+
+  $scope.$watch('location.search().page', function (page) {
+    fetchPage();
+  });
+
+  //This is supposed to refresh the collection page when an Item is updated, but it doesn't seem to work
+  $scope.$on("datasetChanged", function () {
+    fetchPage();
+  });
+
+  $scope.nextPage = function () {
+    $location.search('page', (parseInt($location.search().page) || 1) + 1);
+    fetchPage();
+  }
+
+  $scope.backPage = function () {
+    $location.search('page', (parseInt($location.search().page) || 2) - 1);
+    fetchPage();
+  }
+
+  $scope.addSearchFilter = function (filter) {
+    var field=filter.field,
+      value=filter.valueForQuerying().trim(),
+      ref='filters.' + field,
+      getter = $parse(ref);
+    if (!$scope.filters || !$scope.filters[field]){
+      getter.assign($scope, []);
+    }
+    $scope.filters[field].push(value);
+    $location.search('filters['+field+']', $scope.filters[field].join(','));
+    fetchPage();
+  }
+
+  $scope.removeSearchFilter = function (field,value,index) {
+    $scope.filters[field].splice(index,index+1);
+    if ($scope.filters[field].length > 0){
+      $location.search('filters['+field+']', $scope.filters[field].join(','));
+    } else {
+      $location.search('filters['+field+']', null);
+    }
+    fetchPage();
+  }
+
+  $scope.termSearch = function (args) {
+    $location.path('/search');
+    $scope.query.add(args.field+":"+'"'+args.term+'"');
+  };
+
+  function fetchPage () {
+    searchParams = $location.search();
+
+    if (typeof searchParams['filters[collection_id]'] == 'string') {
+      searchParams['filters[collection_id]'] = parseInt(searchParams['filters[collection_id]'].split("-")[0]);
+    }
+
+    if (typeof $routeParams.collectionId !== 'undefined') {
+      searchParams['filters[collection_id]'] = $routeParams.collectionId;
+    }
+
+    if (typeof searchParams.sortBy !== "undefined") {
+      searchParams['sort_by'] = $routeParams.sortBy;
+    }
+
+    if (typeof searchParams.sortOrder !== "undefined") {
+      searchParams['sort_order'] = $routeParams.sortOrder;
+    }
+
+    if ($scope.query && $scope.query.queryParts.length > 0) {
+      searchParams.query = $scope.query.toSearchQuery();
+    }
+    searchParams.page = $location.search().page;
+    if (!$scope.search) {
+      $scope.search = Loader.page(Search.query(searchParams));
+    } else {
+      Loader(Search.query(searchParams), $scope);
+    }
+
+    $scope.$watch('search', function (search) {
+      SearchResults.setResults(search);
+    });
+  }
+
+  $scope.searchEntity = function(entity, item, collection) {
+    mixpanel.track("Entity search", {
+      "Location": "Search Results Page",
+      "Entity": entity,
+      "Item": item,
+      "Collection": collection,
+      "User": $scope.currentUser.name + ' ' + $scope.currentUser.email
+     });
+  }
+
+  // $scope.letters= ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"];
+   $scope.letters= ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"];
+
+  $scope.setQuery = function (args) {
+    // console.log(args.field);
+
+    if (args.field){
+      if (args.field == "collection"){
+        $scope.title_term= "Collection";
+        $scope.field= "collection_title";
+      }
+      else if (args.field == "entities"){
+        $scope.title_term= "Entity";
+        $scope.field= "entities";
+      }
+      else if (args.field == "creators"){
+        $scope.title_term= "Creator";
+        $scope.field= "creators";
+      }
+      else if (args.field == "interviewers"){
+        $scope.title_term="Interviewer";
+        $scope.field="interviewers";
+      }
+      else if (args.field == "interviewees"){
+        $scope.title_term="Interviewee";
+        $scope.field="interviewees";
+      }
+      else if (args.field == "producers"){
+        $scope.title_term="Producer";
+        $scope.field="producers";
+      }
+      else if (args.field == "hosts"){
+        $scope.title_term="Host";
+        $scope.field="hosts";
+      }
+      else if (args.field == "guests"){
+        $scope.title_term="Guest";
+        $scope.field="guests";
+      }
+      else if (args.field =="tags"){
+        $scope.title_term= "Tag";
+        $scope.field="tags";
+      }
+    };
+    if (args.letter){
+      letter= args.letter
+    };
+    // console.log('letter')
+    // console.log("field : " + $scope.field)
+    if ($scope.field !== "collection_id") {
+      $http.get('/api/search?size=0&aggregations='+$scope.field+'&field='+$scope.field+'&preq='+letter.toUpperCase()+'.*|'+letter.toLowerCase()+'.*&ac=1000').success(function(data) {
+        $scope.terms = [];
+        for (bucket in data.facets[$scope.field]['buckets']) {
+          $scope.terms.push(data.facets[$scope.field]['buckets'][bucket]);
+        }
+      });
+    }
+  };
+
+  $scope.newView = false;
+
+  $scope.toggleView = function () {
+    $scope.terms = []
+    $scope.newView=!$scope.newView;
+  };
+
+  $scope.facetClicks = function(facet, termsOpen) {
+    if (termsOpen === true) {
+      mixpanel.track("Facet expand", {
+        "Facet": facet.name,
+        "User": $scope.currentUser.name,
+        "Email": $scope.currentUser.email
+      });
+    }
+  }
+
+  $scope.moreClicks = function(facet) {
+    $window.alert("Thanks for your feedback! This feature is under consideration.");
+    mixpanel.track("10 More Facets", {
+      "Facet": facet.name,
+      "User": $scope.currentUser.name,
+      "Email": $scope.currentUser.email
+     });
+  }
+
+}]);

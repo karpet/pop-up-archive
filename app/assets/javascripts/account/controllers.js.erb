@@ -1,0 +1,456 @@
+angular.module('Directory.account.controllers', ['stripe', 'Directory.account.models', 'Directory.usage.models', 'ngPlayer'])
+.config(function () {
+  Stripe.setPublishableKey('<%= ENV["STRIPE_PUBLISHABLE_KEY"] %>');
+})
+.controller('AccountCtrl', ['$scope', 'Me', '$modal', '$q', 'Usage', 'Loader', function ($scope, Me, $modal, $q, Usage, Loader) {
+  Me.authenticated(function (me) {
+    $scope.me = me;
+    $scope.gets20Off = false
+  });
+
+  $scope.errors = {};
+  $scope.usageDetails = {};
+  
+  $scope.getsDiscount = function() {
+    return $scope.me.gets20Off
+  }
+
+  $scope.saveCC = function(status, response) {
+    if (response.error) {
+      var e = {};
+      e[response.error.param] = response.error.message;
+      angular.copy(e, $scope.errors);
+    } else {
+      Me.authenticated(function (me) {
+
+      });
+    }
+  }
+
+  $scope.changeCreditCard = function () {
+    $scope.pendingPlan = $scope.me.plan;
+    $scope.showCreditModal();
+  }
+
+  $scope.clickedUpgrade = function () {
+    mixpanel.track(
+      "Clicked Upgrade",{
+        "Source": "Need more room"
+      }
+    );
+  }  
+
+  $scope.clickedFindOut = function () {
+    mixpanel.track(
+      "Clicked Upgrade",{
+        "Source": "Find out more"
+      }
+    );
+  }    
+
+  $scope.changedPlan = function () {
+    mixpanel.track(
+      "Clicked Upgrade",{
+        "Source": "Change plan btn"
+      }
+    );
+  } 
+
+  $scope.changemyPlan = function () {
+    mixpanel.track(
+      "Clicked Upgrade",{
+        "Source": "Change my plan"
+      }
+    );
+  } 
+
+    $scope.refPaid = function () {
+    mixpanel.track(
+      "Clicked Referral",{
+        "Source": "Paid account page"
+      }
+    );
+  } 
+    $scope.refDemo = function () {
+    mixpanel.track(
+      "Clicked Referral",{
+        "Source": "Demo account page"
+      }
+    );
+  }   
+
+  var creditCardModal = $modal({template: '/assets/account/credit_card.html', persist: true, show: false, backdrop: 'static', scope: $scope});
+
+  $scope.showCreditModal = function () {
+    creditCardModal.$promise.then(creditCardModal.show);
+  }
+
+  $scope.hideCreditModal = function () {
+    creditCardModal.$promise.then(creditCardModal.hide);
+  }
+
+  $scope.$on('creditCardSubmit', function( event){
+    $scope.hideCreditModal();
+  });
+
+  $scope.$on('openModal', function( event){
+    $scope.showCreditModal();
+  });
+
+  $scope.toggleDetails = function($event) {
+    var btn = $($event.target);
+    // make sure we actually have the button and not the icon
+    var btnTag = btn.prop('tagName').toLowerCase();
+    //console.log('btnTag:', btnTag);
+    if (btnTag != 'button') {
+      btn = btn.parent();
+    }
+    var tbody = btn.parents('.usage-month-group');
+    var period = tbody.data('period');
+
+    // if not already loaded for period, load w/promise
+    if (!$scope.me.usageDetailsByMonth(period)) {
+      Loader(Usage.get(period)).then( function(usage) {
+        var transcriptDetails = usage[period];
+        $scope.me.usage.transcripts[period] = transcriptDetails;
+        if (usage.organization && $scope.me.organization) {
+          $scope.me.organization.usage.transcripts[period] = usage.organization[period];
+        }
+        $scope.me.buildUsageSummary();
+      });
+    }
+
+    //console.log('toggle ', period);
+    if (!$scope.usageDetails[period]) {
+      $scope.usageDetails[period] = true;
+      btn.html('<i class="icon-large icon-collapse-alt"></i> Details');
+    }
+    else {
+      $scope.usageDetails[period] = false;
+      btn.html('<i class="icon-large icon-expand-alt"></i> Details');
+    }
+  }
+
+  $scope.usageDetailsVisible = function(period) {
+    return $scope.usageDetails[period]; 
+  }
+
+}])
+
+.filter('shortInterval', function () {
+  return function (interval) {
+    if (!interval || interval.toLowerCase() == 'month') {
+      return 'mo';
+    } else {
+      return 'yr';
+    }
+  }
+})
+
+.controller('AccountPlanCtrl', ['$scope', 'Me', 'Plan', '$modal', '$location', '$window', 'SampleAudio', 'Subscribe', function ($scope, Me, Plan, $modal, $location, $window, SampleAudio, Subscribe) {
+
+  Me.authenticated(function (me) {
+    $scope.me = me;
+    $scope.pendingPlan = me.plan.id;
+    $scope.interval = me.plan.interval;
+    
+  });
+
+  $scope.interval = 'month';
+
+  $scope.hasPaidPlan = function(me) {
+    if ($scope.me.plan.id === "premium_community") {
+      return false
+    }else {
+      return true
+    }
+  }
+
+  $scope.isLoggedIn = function () {
+    if ($scope.pendingPlan.match(/_yearly/g)) {
+      return true
+    }else if ($scope.pendingPlan.match(/_monthly/g)) {
+      return true
+    } else if ($scope.pendingPlan.match(/community/g)) {
+      return true
+    } else if ($scope.me)  {
+      return true  
+    } else {
+      return false
+    } 
+  };
+
+  $scope.isCurrentPlan = function (plan) {
+    return plan && $scope.me && $scope.me.plan && plan.id == $scope.me.plan.id;
+    
+  };
+
+  $scope.hasNoDeals = function() {
+    if($scope.hasDemoCoupon()) {
+      return false
+    } else if ($scope.has2020Coupon()){
+      return false
+    } else {
+      return true
+    }
+  }
+
+  $scope.hasSpecialPlan = function () {
+    if (!$scope.me) { return false };
+    var special = true;
+    angular.forEach($scope.plans, function (plan) {
+      if (plan.id == $scope.me.plan.id) {
+        special = false;
+      }
+    });
+    return special;
+  };
+  // for demo referral: sent 3 emails while on demo plan
+  $scope.hasDemoCoupon = function($location) {
+    
+    if(window.location['pathname'] != '/pricing/demo-discount') {
+      return false
+    // }else if(!plan.match(/small_business/g))  {
+    //   return true
+    } else {
+      $scope.me.gets20Off = true
+      return true
+    }
+  };
+  
+  $scope.has2020Coupon = function($location) {
+    // var plan = $scope.me.plan.id
+    if(window.location['pathname'] != '/pricing/pop-up-friend') {
+      return false
+    // }else if(plan.match(/small_business/g))  {
+    //   return true
+    } else {
+      return true 
+    }
+  }
+
+  subscribe = function (plan) {
+    $scope.plan = plan;
+    $modal({template: '/assets/account/signup_verify.html', persist: true, show: true, backdrop: 'static', scope: $scope});
+  };
+
+  $scope.completeSubscribe = function (plan) {
+    $scope.pendingPlanObj = plan;
+    if ($scope.me.creditCard || $scope.pendingPlanObj.amount == 0) {
+      $scope.me.plan.id = $scope.pendingPlanObj.id;
+      $scope.me.subscribe($scope.pendingPlanObj.id, $scope.offer.code).then(function () {
+        $location.path('/account');
+      });
+    } else {
+      var unregister = $scope.$on('creditCardSubmit', function () {
+        unregister();
+        $scope.me.plan.id = $scope.pendingPlanObj.id;
+        $scope.me.subscribe($scope.pendingPlanObj.id, $scope.offer.code).then(function () {
+          $location.path('/account');
+        });
+      });
+      $scope.$broadcast('openModal');
+    }
+  };
+}])
+.controller('CreditCardCtrl', ['$scope', function ($scope) {
+  var currentUser = $scope.currentUser || $scope.me;
+  $scope.errors = {};
+  $scope.creditCard = currentUser.creditCard;
+  $scope.saving = false;
+  $scope.save = function(status, response) {
+    console.log(window.location)
+    if (response.error) {
+      console.log("with error: " + window.location)
+      var e = {};
+      e[response.error.param] = response.error.message;
+      angular.copy(e, $scope.errors);
+    } else {
+      console.log("no error else: " + window.location)
+      $scope.saving = true;
+      currentUser.updateCreditCard(response.id).then(function (data) {
+        $scope.$emit('creditCardSubmit', data);
+        if ($scope.onDemandRequiresCC) {
+          $scope.$emit('userHasValidCC', data);
+        }
+      });
+    }
+  }
+}])
+.filter('monthOrYear', function () {
+  var plans_ = [];
+  return function monthOrYear (plans, monthOrYear) {
+    if(angular.isArray(plans)) {
+      plans_.length = 0;
+      angular.forEach(plans, function (plan) {
+        plan[monthOrYear].frequency = (plan[monthOrYear].frequency || monthOrYear);
+        plan[monthOrYear].hours = (plan[monthOrYear].hours || plan.level);
+        plans_.push(plan[monthOrYear]);
+      });
+      plans = plans_;
+    }
+    return plans;
+  }
+})
+.controller('SignUpCtrl', ['$scope', 'Me', '$location', 'Plan', '$modal', 'SampleAudio', 'Subscribe', function($scope, Me, $location, Plan, $modal, SampleAudio, Subscribe) {
+  Me.authenticated(function (me) {
+    $location.path('/account/plan').replace();;
+  });
+  
+  subscribe = function (plan) {
+    var referrer_string = window.location.search.split('ui=')[1]
+    if (referrer_string != null) {
+      var referrer = referrer_string.match(/^[0-9]*$/g)
+    }
+    if (referrer != null) {
+      window.location = "/users/sign_up?plan_id=" + plan.id + "&ui=" + referrer_string + "&offer_code=PopUpFriend" 
+    } else {
+      window.location = "/users/sign_up?plan_id=" + plan.id;
+    }
+  }  
+
+}])
+
+.controller('PRXAccountPlanCtrl', ['$scope', 'Me', 'Plan', '$location', function ($scope, Me, Plan, $location) {    
+  // $scope.me = true;    
+  // Plan.get().then(function (plans) {   
+  //   angular.forEach(plans, function (plan) {   
+  //     if (plan.name == "Radio Race Free Trial") {    
+  //       console.log(plan);  
+  //       min = plan.amount; 
+  //       suggest = plan;   
+  //     }    
+  //   });       
+  //   $scope.plan = suggest;   
+  // });    
+   
+  // Me.authenticated(function (me) {   
+  //   $scope.me = me;    
+  // });    
+   
+  // $scope.subscribe = function () {   
+  //   $scope.signingUp = true;   
+  //   $scope.me.subscribe($scope.plan.id, 'prx').then(function () {    
+  //     $location.path('/account');    
+  //   });    
+  // };   
+   
+  // $scope.cancel = function () {    
+  //   $location.path('/account/plan');   
+  // }    
+}]) 
+
+.controller('PRXSignUpCtrl', ['$scope', 'Me', 'Plan', '$location', function ($scope, Me, Plan, $location) { 
+  Plan.get().then(function (plans) {   
+    angular.forEach(plans, function (plan) {   
+      if (plan.interval == 'month' && plan.name == "Radio Race Free Trial") {     
+        suggest = plan;         
+      }
+    });     
+    $scope.plan = suggest;
+  });
+  $scope.signUpPua=function () {
+    Me.authenticated(function (me) { 
+      var currentUser = $scope.currentUser || $scope.me;
+      $scope.me = me;
+      $scope.signingUp = true;   
+      $scope.me.subscribe($scope.plan.id, 'radiorace').then(function () {    
+        $location.path('/account');    
+      }); 
+    })
+  }
+  $scope.signUpNew=function () {
+    $scope.signingUp = true;   
+    window.location.href = '/users/sign_up?plan_id=' + $scope.plan.id + '&offer_code=radiorace';          
+  }
+}])
+
+.controller('ReferralCtrl', ['$scope', 'Me', 'Plan', '$location', function ($scope, Me, Plan, $location) { 
+
+    Me.authenticated(function (me) {
+      $scope.me = me;
+      $scope.emailBody = "Hey there,\n \nYour friend, " + $scope.me.name + ", just invited you to join Pop Up Archive, a service that makes audio searchable with high-accuracy automatic transcripts. Pop Up Archive can help save you tons of time transcribing, and allows you to search for exact words and phrases within audio files. \n \nClick here to get 20% off of your first month with our #PopUpFriend discount: www.popuparchive.com/pricing?ui=" + $scope.me.id + ". There's also a free demo you can try out. Learn more at www.popuparchive.com/about. \n \nThanks!\nThe Pop Up Archive Team"
+      $scope.plan = $scope.me.plan
+      var currentUser = $scope.currentUser || $scope.me;
+      
+      $scope.hasPaidPlan = function(me) {
+        $scope.plan = $scope.me.plan
+        if ($scope.plan.id === "premium_community") {
+          return false
+        }else {
+          return true
+        }
+      }
+    });
+
+    // $scope.signUpReferral=function () {
+    //   Me.authenticated(function (me) { 
+    //     var currentUser = $scope.currentUser || $scope.me;
+    //     $scope.me = me;
+    //     $scope.signingUp = true;   
+    //     $scope.me.subscribe($scope.plan.id, '#PopUpFriend').then(function () {    
+    //       $location.path('/account');    
+    //     }); 
+    //   })
+    // }
+    
+    var emails = [0,1,2];
+    $scope.emails = emails;
+      
+
+    $scope.text = 'me@example.com';
+    
+    isPaidPlan = function() {
+      $scope.plan = $scope.currentUser.plan.id
+      if ($scope.plan.match(/_yearly/g)) {
+        return true
+      } else if ($scope.plan.match(/_monthly/g)) {
+        return true
+      }else {
+        return false
+      }
+    };
+
+    $scope.addIndex = function(emailsCount) {
+      var newField = emails[emails.length-1] +1
+      emails.push(newField)
+    };
+
+    $scope.sendMail = function(me) {
+      var addresses=[]
+      var currentUser = $scope.currentUser || $scope.me;
+      var formFields = $('input')
+      var form = $('#emailForm')
+      if (!currentUser.plan.id.match(/_hour/g)) {
+        $scope.param = "demo-discount"
+      } else {
+        $scope.param = "pop-up-friend"
+      }
+      for (i = 1; i < formFields.length; i++) {
+        var data = {"mail_details":{}}
+        data['mail_details']['to'] = formFields[i].value;
+        data['mail_details']['body'] = $('#emailBody').val();
+        data['mail_details']['subject'] = $scope.me.name + " sent you a discount for automatic transcription from Pop Up Archive";
+        var request = $.ajax({
+                        url: '/invite/',
+                        type: "POST",
+                        data: JSON.stringify(data),
+                        contentType: 'application/json; charset=utf-8',
+                        dataType: "json",
+                    });
+
+                    request.done(function(msg) {
+                        // increment()
+                        // alert("Your invite has been sent. Use the code #DemoDiscount when you upgrade for 20% off!");
+                    });
+
+                    request.fail(function(jqXHR, textStatus) {
+                        // alert( "Something went wrong. Please try again.");
+                    });
+      }
+      
+      $location.path('/pricing/' + $scope.param);
+      
+    };
+    $scope.email = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:[A-Z]{2}|com|org|net|gov|mil|biz|info|mobi|name|aero|jobs|museum)\b/;
+}])

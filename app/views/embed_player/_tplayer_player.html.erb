@@ -1,0 +1,62 @@
+<table id="pua-tplayer-<%= @file_id %>-player" class="pua-tplayer">
+ <tr class="img-player">
+  <td class="img">
+   <a href="/collections/<%= @audio_file.item.collection_id %>/items/<%= @audio_file.item_id %>/" target="_blank">
+     <img src="<%= @audio_file.item.image_url || asset_path('minimark.png') %>" />
+   </a>
+  </td>
+  <td class="tplayer"> 
+   <div id="pua-tplayer-<%= @file_id %>" class="jp-jplayer pua-tplayer"></div>
+   <div id="jp_container-<%= @file_id %>" class="jp-audio player">
+     <div class="jp-type-single">
+       <div class="jp-gui jp-interface">
+         <div class="jp-title">
+           <h2><%= @title %></h2>
+         </div>
+         <table class="tplayer-bar">
+          <tr>
+          <td class="jp-controls">
+           <button id="jp-reverse-button-<%= @file_id %>" class="jp-rewind player-button">
+               <i class="fa fa-fast-backward"></i>
+           </button>
+           <button id="jp-play-button-<%= @file_id %>" class="jp-play player-button">
+               <i class="fa fa-play"></i>
+           </button>
+           <button id="jp-pause-button-<%= @file_id %>" class="jp-pause player-button">
+               <i class="fa fa-pause"></i>
+           </button>
+          </td>
+          <td class="jp-progress">
+           <div class="calculating"><i class="fa fa-cog fa-spin"></i> Calculating</div>
+           <div class="jp-seek-bar">
+             <div class="jp-play-bar"></div>
+           </div>
+          </td>
+          <td class="tplayer-stats">
+ 
+           <div class="jp-time-holder">
+             <div class="jp-current-time" role="timer" aria-label="time"></div> / 
+             <div class="jp-duration" role="timer" aria-label="duration"></div>
+           </div>
+ 
+           <div class="pua-links">
+             <a class="jp-popuplink pua-up-link" href="/collections/<%= @audio_file.item.collection_id %>/items/<%= @audio_file.item_id %>/" target="_blank"><span title="up"></span></a>
+           </div>
+
+          <!-- scrubber used for drawing waveform, not displayed -->
+           <div class="scrubber"><canvas></canvas></div>
+          </td>
+
+         </tr>
+         </table>
+       </div>
+
+       <div class="jp-no-solution">
+         <span>Update Required</span>
+         To play the media you will need to either update your browser to a recent version or update your <a href="http://get.adobe.com/flashplayer/" target="_blank">Flash plugin</a>.
+       </div>
+     </div>
+   </div>
+  </td>
+ </tr>
+</table>

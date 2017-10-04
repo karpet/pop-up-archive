@@ -1,0 +1,8 @@
+Pop Up Archive Item: "<%= transcript.audio_file.item.title %>" : <%= transcript.audio_file.item.url %>
+Transcript for file: <%= transcript.audio_file.filename %>
+<% if transcript.has_speaker_ids %>
+	<%= render "premium" %>
+<% else %>
+	<%= render "basic" %>
+<% end %>
+

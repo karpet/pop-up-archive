@@ -1,0 +1,25 @@
+.faq
+  .row
+    .col-md-12
+      h2 FAQs
+  .row.index
+    .col-md-12
+      ul ng-repeat="item in faq"
+        li 
+          a ng-click="scrollTo(item.link)" {{item.title}}
+          i.fa.fa-plus  
+  p.alert.alert-info.pull-center
+    i.fa.fa-star-empty
+      strong
+        |  For user questions and tutorials, visit our 
+        a href="https://popuparchiveorg.zendesk.com/hc/en-us" Help Center
+        | .
+
+  .row ng-repeat="item in faq" 
+    .col-md-12 id='{{item.link}}'
+      h3() {{item.title}}
+      .question ng-repeat="entry in item.questions"
+        h4() {{entry.question}}
+        p()  {{entry.answer}}
+
+ 

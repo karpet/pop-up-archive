@@ -1,0 +1,172 @@
+//Tutorial
+.tutorial-step {
+  font-family: soleil, helvetica, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 24px;
+
+  .tutorial-navigation {
+    margin-top: 8px;
+  }
+}
+
+.img-background {
+  margin: auto;
+  width: 100%;
+  background-color: #e8d29d;
+  padding: 10px 0;
+  margin: 10px 0;
+  text-align: center;
+}
+
+ul.pagination {
+  li:active, li:focus, a {
+    background-color: #fff !important;
+  }
+}
+
+.collections-list {
+  margin: 0;
+  .image {
+    position:relative;
+    overflow: hidden;
+    width: 80px;
+    height: 80px;
+    text-align: center;
+    text-overflow:ellipsis;
+    float: left;
+    border-radius: 10px;
+    margin: 0 0 0 10px;
+
+    .box {
+      background: image-url('box.svg') no-repeat center;
+      margin-left:auto;
+      margin-right:auto;
+      display: block;
+      height: 75px;
+      width: 75px;
+    }
+  }
+}
+
+.collection-box {
+  list-style: none;
+  border-radius: 10px;
+  position: relative;
+  overflow: visible;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.3) inset, 0 1px 0 white;
+  margin: 0 0 30px 0;
+  padding: 10px 0;
+  overflow-x: auto;
+  overflow-y: auto;
+
+  .col-image {
+    height: 75px;
+    width: 75px;
+    float: left;
+    margin: 5px 15px 10px;
+  }
+
+  .ribbon {
+    display: block;
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 54px;
+    width: 54px;
+    text-indent: -9000px;
+    &.public {
+      background: image-url('public-banner.png') no-repeat;
+    }
+    &.private {
+      background: image-url('private-banner.png') no-repeat;
+    }
+  }
+  
+  .collection-info {
+    max-width: 820px;
+    h3 {
+      color: #f25b4c;
+      text-decoration: underline;
+    }
+    span {
+      font-family: helvetica;
+      color: #7c7b81;
+      top: 17px;
+      font-size: 16px;
+      margin-left: 10px;
+    }
+  }
+  .recent-items {
+    clear: both;
+    margin: 10px 15px 0;
+    .labels {
+      font-weight: bold;
+    }
+    .col-xs-4 {
+      width: 33.3333%;
+      position: relative;
+      min-height: 1px;
+      padding: 0;
+      float: left;
+      white-space: nowrap;
+      overflow-x: hidden;
+    }
+    .items-list {
+      margin: 0;
+      list-style: none;
+      li {
+        line-height: 28px;
+      }
+    }
+    .odd-file {
+      background-color: #F2EFEF;
+    }
+  }
+  .upload-item-to-collection {
+    font-size: 14px;
+    width: 96%;
+    margin-left: 2%;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2), 0 1px 0 white;
+  }
+}
+.collection-button {
+  font-family: soleil;
+  font-weight: 900;
+  color: #736259;
+  background-color: #C4E8F8;
+  border-radius: 5px;
+  border: none;
+  padding: 5px;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.3), 0 1px 0 white;
+}
+
+  .upload-item-to-collection:hover {
+    font-size: 14px;
+    width: 96%;
+    margin-left: 2%;
+    background-color: #d9edf7;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2), 0 1px 0 white;
+  }
+
+.add-collection {
+  width: 100%;
+  font-size: 18px;
+  padding: 8px;
+  margin-bottom: 20px;
+}
+
+.add-collection:hover {
+  width: 100%;
+  font-size: 18px;
+  padding: 8px;
+  margin-bottom: 20px;
+  background-color: #d9edf7;
+}
+
+
+.colhighlight {
+  font-weight: 900;
+  font-family: soleil, helvetica, sans-serif;
+}

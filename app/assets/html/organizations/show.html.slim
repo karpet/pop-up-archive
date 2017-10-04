@@ -1,0 +1,17 @@
+h2() {{organization.name}}
+
+h4 Members
+ul
+  li ng-show="currentUser.isAdmin()" class="organization-member"
+    input.text.input-xlarge#add-org-member size="50"
+    button.btn.btn-default#add-org-member-button type="button" ng-click="sendOrgMemberInvite($event)"
+      i.fa.fa-user-plus
+      |  Add new member by email
+  li ng-repeat="user in organization.invitedUsers" class="organization-member organization-member-invite"
+    span class='name' ng-bind="user.name"
+    span class='role' Invited
+    button.btn.btn-default class='delete-member' title="Delete member" ng-click="deleteMember(user)" ng-if="user.role !== 'admin' && currentUser.isAdmin()" x
+  li ng-repeat="user in organization.users" class="organization-member"
+    span class='name' ng-bind="user.name"
+    span class='role' ng-bind="user.role"
+    button.btn.btn-default class='delete-member' title="Delete member" ng-click="deleteMember(user)" ng-if="user.role !== 'admin' && currentUser.isAdmin()" x

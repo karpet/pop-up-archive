@@ -1,0 +1,26 @@
+div
+ 	p This is where completed batch uploads live.
+ 	p Do you have direct public links to your audio (like a Dropbox.com public folder or other server)?
+	p
+		| You can add them to Pop Up Archive all at once using our 
+		a href="/imports/new" batch upload spreadsheet.
+
+div ng-show="csvImports"
+  ul.media-list
+    li.media ng-repeat="import in csvImports | sortByImportState" ng-class="{muted:(import.terminal())}"
+      a.pull-left ng-href="{{import.link()}}"
+        img.media-object src='#{asset_path("minimark.png")}'
+      .media-body
+        a ng-href="{{import.link()}}"
+          h4.media-heading Import: {{import.file}}
+        p
+          span.label ng-class="{'label-success':(import.state=='imported'), 'label-important':(import.state == 'error'), 'label-info':(import.state == 'analyzed')}" {{import.state.charAt(0).toUpperCase() + import.state.slice(1);}}
+          |  
+          span.badge.badge-inverse ng-show='import.rowCount' {{import.rowCount}} rows 
+          |  
+          span.label.label-info
+            |{{import.createdAt | date:'yyyy-MM-dd hh:mma'}}
+        p ng-hide="import.terminal() || import.unActionable()"
+          a.btn.btn-primary ng-href="/imports/{{import.id}}" {{import.editButtonMessage()}}
+          |  
+          button.btn.btn-link ng-click="import.cancel()" Cancel

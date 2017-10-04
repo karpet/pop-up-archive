@@ -1,0 +1,22 @@
+.modal
+  .modal-dialog
+    .modal-content
+      .modal-header
+        button type="button" class="close" aria-label="Close" ng-click="$hide()"
+          span aria-hidden="true" &times;
+        h3 ng-show="collection.id" Edit {{collection.title}}
+        h3 ng-hide="collection.id" Create a new {{collection.privateOrPublic()}} Collection
+      .modal-body
+        p
+          | You're editing  
+          strong ng-pluralize="" count="selectedItems.length" offset="3" when="{'1':'{{selectedItems[0].getTitle()}}','2':'{{selectedItems[0].getTitle()}} and {{selectedItems[1].getTitle()}}', '3': '{{selectedItems[0].getTitle()}}, {{selectedItems[1].getTitle()}}, and {{selectedItems[2].getTitle()}}', 'one': '{{selectedItems[0].getTitle()}}, {{selectedItems[1].getTitle()}}, {{selectedItems[2].getTitle()}}, and one other item', 'other': '{{selectedItems[0].getTitle()}}, {{selectedItems[1].getTitle()}}, {{selectedItems[2].getTitle()}}, and {} other items'}"
+          |.
+        form.form-horizontal
+          .form-group
+            label.control-label
+              | Tags
+            .controls
+              input type='hidden' ng-model="selected.tags" ui-select2="tagSelect"
+      .modal-footer
+        button.btn.btn-default type="button" ng-click="$hide()" Close
+        button.btn.btn-primary ng-click="submit(); $hide()" Save

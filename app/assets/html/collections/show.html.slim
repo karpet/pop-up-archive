@@ -1,0 +1,23 @@
+.row
+  .col-md-12    
+    .page-nav.pull-right
+      button.btn.btn-default ng-show="currentUser.canEdit" ng-click="uploadFile()"
+        i.fa.fa-upload-alt
+        |  Upload
+      button.btn.btn-default ng-show="currentUser.canEdit" ng-click="newCollection()"
+        i.fa.fa-edit
+        |  Edit Collection
+      button.btn.btn-danger ng-click="delete()" ng-disabled="!currentUser.isAdmin()" ng-show="currentUser.canEdit"
+        i.fa.fa-trash
+        |  Delete Collection
+
+    .thumb-and-title    
+      img ng-if="collection.imageFiles && collection.imageFiles.length" ng-src="{{ updateImage() }}"
+      h2 Browsing {{collection.title}}
+      .clear
+
+    p ng-show="collection.description" ng-bind-html="collection.description"
+
+    div ng-if="collection.numberOfItems > 0"
+      ng-include ng-controller="SearchResultsCtrl" src="'#{asset_path 'search/results.html'}'"
+    div ng-if="collection.numberOfItems == 0 && canEdit" ng-include="'#{asset_path 'collections/new.html'}'"

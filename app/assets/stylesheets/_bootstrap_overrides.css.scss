@@ -1,0 +1,60 @@
+/* responsive overrides
+   NOTE this section *MUST* come last in the file, so don't add anything here
+   unless you want it to affect mobile devices.
+   These particular break points are not tied to any specific device.
+   Instead they are tied directly to our specific layout.
+*/
+/* 940px is currently the .container fixed width */
+@media only screen and (max-width: 940px) {
+  .navbar-static-top .container,
+  .navbar-fixed-top .container,
+  .container,
+  .col-md-12,
+  .col-md-10,
+  .col-md-9 {
+    width: auto;
+  }
+}
+
+/* nav breaks-per-item */
+@media screen and (max-width: 900px) {
+  .navbar-collapse .pull-right li a #my_dashboard .nav-label {
+    display: none;
+  }
+  body, body.authn, .navbar-fixed-top .navbar-inner, .navbar-fixed-bottom .navbar-inner {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .navbar-collapse .nav.pull-right {
+    /* stop pulling right */
+    float: left;
+  }
+  .site-title.authn .logo.archive {
+    clear: none;
+  }
+  /* un-fix header */
+  .navbar-shadow {
+    display: none;
+    position: relative;
+    &:after {
+      margin: auto;
+    }
+  }
+  .authn .navbar-shadow-hider,
+  .navbar-shadow-hider {
+    top: auto;
+    display: none;
+  }
+  .navbar-fixed-top {
+    position: relative;
+  }
+  body, body.authn {
+    padding-top: 0;
+  }
+  .featurebtn2 {
+    margin-left: 0;
+  }
+}

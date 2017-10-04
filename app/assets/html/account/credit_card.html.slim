@@ -1,0 +1,55 @@
+section.modal ng-controller="CreditCardCtrl"
+  .modal-dialog
+    .modal-content
+      .modal-header
+        button type="button" class="close" aria-label="Close" ng-click="$hide()"
+          span aria-hidden="true" &times;
+        h3 ng-show="creditCard" Update My Credit Card
+        h3 ng-hide="creditCard" Subscribe to Pop Up Archive
+      form stripe-form="save"
+        .loading-shield ng-show="saving"
+          i.fa.fa-refresh.fa.fa-spin
+        .modal-body
+          p ng-show="pendingPlanObj"
+            | You are signing up for a&nbsp;
+            strong() {{pendingPlanObj.hours}} hour&nbsp;
+            | plan at the rate of&nbsp;
+            strong() {{pendingPlanObj.amount/100|currency}} per {{pendingPlanObj.interval}}.
+          hr ng-show="pendingPlanObj"
+          .stripe-cc.form-horizontal
+            .form-group ng-class="{error: errors.number}"
+              label.control-label for="number" Credit Card
+              .controls
+                input type="text" size="20" name="number" data-stripe="number"
+                span.help-block ng-show="errors.number" ng-bind="errors.number"
+            .form-group ng-class="{error: errors.cvc}"
+              label.control-label for="cvc" CVC
+              .controls
+                input type="text" size="4" name="cvc" data-stripe="cvc"
+                span.help-block ng-show="errors.cvc" ng-bind="errors.cvc"
+            .form-group ng-class="{error: errors.exp_month || errors.exp_year }"
+              label.control-label for="exp-month" Exp. (MM/YYYY)
+              .controls
+                input type="text" size="2" name="exp-month" data-stripe="exp-month"
+                | &nbsp;/&nbsp;
+                input type="text" size="4" name="exp-year" data-stripe="exp-year"
+                span.help-block ng-show="errors.exp_month + errors.exp_year" ng-bind="errors.exp_month + errors.exp_year"
+          hr
+          p ng-hide="creditCard"
+            p ng-show="onDemandRequiresCC"
+              | Your credit card will be billed for each premium transcript you order.
+            p ng-hide="onDemandRequiresCC"
+              | To begin your subscription, please enter your credit card information above.
+              |  Billing occurs automatically once a month starting on
+              |  the day your subscription begins.
+          p ng-show="creditCard"
+            | To update your credit card, please enter the new information above. All future
+            |  charges for your account will be issued to the new card.
+          p
+            | Questions or concerns? See our &nbsp;
+            a href="/terms_of_use" target="_blank" Terms of Service
+            | .
+        .modal-footer
+          button.btn.btn-default.pull-left ng-disabled="saving" ng-click="$hide(); $event.stopPropagation()" Cancel
+          button.btn.btn-primary ng-show="creditCard" ng-disabled="saving" type="submit" Update Account
+          button.btn.btn-primary ng-hide="creditCard" ng-disabled="saving" type="submit" Subscribe

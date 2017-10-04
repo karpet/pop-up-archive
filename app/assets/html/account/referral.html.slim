@@ -1,0 +1,43 @@
+.intro.text-center ng-controller="ReferralCtrl" 
+  h1 ng-show="!hasPaidPlan()" 
+    | Refer a friend!
+  h1 ng-show="hasPaidPlan()" 
+    | Give 20%, get 20%.
+
+.row.text-center      
+    .col-xs-12
+
+        h3 ng-show="!hasPaidPlan()"
+          | Invite 3 or more friends for 20% off your first month.
+        h3 ng-show='hasPaidPlan()' 
+          | Get 20% off when a friend signs up for a paid plan with your promo code.
+        
+        form.form_horizontal id="emailForm" name="referralForm" 
+          div style='margin-top: 50px;'
+            div.col-sm-12.text-left.col-sm-offset-3         
+              label.control-label
+                | TO :
+            div.email-list.col-md-6.col-md-offset-3 ng-form="subForm" ng-repeat="i in emails"
+              input.form-control type='email' name='email' ng-data-model='email' id='{{i}}' ng-model='email' placeholder="Enter an email address" required="true" style='margin-top: 30px;'
+              div role='alert'
+                span.error ng-show="subForm.email.$error.email && subForm.email.$dirty"
+                  | This email addresses is invalid. Please try again.
+            span.col-md-3.col-md-offset-7.glyphicon.glyphicon-plus ng-click="addIndex()" style="margin-top: 25px;"
+              | another.
+            span.error.col-md-6.col-md-offset-3 ng-show="referralForm.$invalid" 
+              span.lead style='margin-bottom=40px'
+                | Please enter at least 3 email addresses.
+                br
+            div.col-md-8.col-md-offset-2 style='margin-top: 50px;'   
+              textarea.form-control id="emailBody" rows="6" ng-model="emailBody" ng-init="emailBody"
+                    
+            
+            div.col-md-2.col-md-offset-5.text-center style='margin-top: 50px;'
+              button.btn.btn-default.btn-lg.raised type="button" ng-disabled="referralForm.$invalid" ng-click="showcode=true; sendMail()"  style="background: #F25A4C; padding-left: 30px; padding-right: 30px; font-weight: bold; color: white" INVITE
+            
+            div.col-sm-6.col-sm-offset-3.text-center ng-hide="hasPaidPlan()" style='margin-top: 40px; margin-bottom: 40px;'
+              | Make sure you're ready to redeem your discount as soon as you send the invites! You can only redeem your discount immediately after sending.
+
+            div.col-md-2.col-md-offset-5 ng-show="showcode" style='height: 40px; border: 1px solid black; margin-bottom: 100px; border-radius: 5px; padding-top: 10px;'
+              | #PopUpFriend
+

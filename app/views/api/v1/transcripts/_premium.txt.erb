@@ -1,0 +1,20 @@
+<% prev_speaker_id = 0 -%>
+<% count = 0 -%>
+<% transcript.timed_texts.each do |tt| -%>
+<% duration = (tt.end_time - tt.start_time) -%>
+<% if (prev_speaker_id != tt.speaker_id) || (count > 30) -%>
+<% count = 0 -%>
+<%= "\n" %>
+<% if params["timestamps"] == "true" -%>
+<%= format_time(tt.start_time) %>
+<% end %>
+<% speaker=tt.speaker -%>
+<% if speaker.created_at != speaker.updated_at -%>
+<%= speaker.name + "\n" %>
+<% end %>
+<% else -%>
+<% count += duration -%>
+<% end %>
+<%= tt.text + " " -%>
+<% prev_speaker_id = tt.speaker_id -%>
+<% end %>

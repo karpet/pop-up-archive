@@ -1,0 +1,81 @@
+.row
+  .col-xs-12
+    ul.pager.top
+      li.previous ng-class="{disabled: search.page <= 1}"
+        a ng-click="search.page <= 1 || backPage()" href='#' &larr; Previous
+      li.centered
+        form.form-inline.with-tags ng-controller="SearchCtrl" ng-submit="query.commit()"
+          .input-group
+            input.search-query.form-control ng-model='query.string' type='search' placeholder="Search"
+            button.btn.btn-default type='submit' go
+          ul.inline.tags
+            li.label ng-repeat="part in query.queryParts"
+              | {{part | queryPartHumanReadable }}
+              i.fa.fa-times-circle ng-click="query.remove(part)"
+            span ng-repeat="(field,values) in filters"
+              li.label ng-repeat="(index,value) in values"
+                | {{value.slice(1,-1)}}
+                i.fa.fa-times-circle ng-click="removeSearchFilter(field, value, index)"
+      li.next ng-class="{disabled:!search.hasMoreResults()}"
+        a ng-click="!search.hasMoreResults() || nextPage()" href="#" Next &rarr;
+.row
+  .col-md-4.facets.no-mobile
+    .facet ng-repeat="facet in search.facetsAsObjects(true)" ng-show="facet.visible()"
+      h5 ng-click="termsOpen = !termsOpen; facetClicks(facet, termsOpen)" ng-init="termsOpen=$first"
+        | {{facet.name | lowercase}}
+      ul.list-unstyled.terms
+        li ng-repeat="entry in facet.entries()"
+          small.pull-right() ({{entry.count}}) 
+          .label.label-info ng-click="addSearchFilter(entry)" {{entry.nameForPresenting()}}
+        / li 
+        /   a href="#" ng-show="facet.entries().length >= 10" ng-click="moreClicks(facet)" Show 10 More
+  .col-xs-12.col-md-8
+    h5.result-count.pull-left() {{search.firstItemNumber()}} to {{search.lastItemNumber()}} of {{search.totalHits}} items 
+    .sort-options
+      select ng-model="selectedSort" ng-options="item.name for item in sortOptions" ng-change="sortResults(selectedSort)"
+      
+    /.result-count-header
+      ul.pager ng-show="search.hasMoreResults() || search.page > 1"     
+        li.previous ng-class="{disabled: search.page <= 1}"
+          a ng-click="backPage()" href='#' &larr; Previous                     
+        li.next ng-class="{disabled:!search.hasMoreResults()}"
+          a ng-click="nextPage()" href='#'  Next &rarr;
+        
+      
+    .media.search-result ng-repeat="item in search.results | toItems"
+      .media-body
+        a.pull-left ng-click="item.play()" ng-show="item.paused()"
+          i.play-overlay.fa.fa-play
+          img.media-object ng-src="{{(item.imageFiles.length > 0 && item.getThumbImage()) || defaultMiniMarkImage}}"
+        a.pull-left ng-click="item.pause()" ng-show="item.playing()"
+          i.play-overlay.fa.fa-pause
+          img.media-object ng-src="{{(item.imageFiles.length > 0 && item.getThumbImage()) || defaultMiniMarkImage}}"
+        a.pull-left ng-hide="item.playable()" ng-href="{{item.link()}}"
+          img.media-object ng-src="{{(item.imageFiles.length > 0 && item.getThumbImage()) || defaultMiniMarkImage}}"
+				.media
+					h4.media-heading ng-show="item.getTitle()"
+						a ng-href="{{item.link()}}" {{item.getTitle()}}
+          h5 ng-bind-html="item.collectionTitle"
+          p ng-show="item.getShortDescription()" ng-bind-html="item.getShortDescription()"
+          p.item-details
+            .created-at ng-show="item.getCreatedAt()"
+              | Created: {{item.getCreatedAt()}}
+            .added-at
+              | Added: {{item.getAddedAt()}}
+            .duration 
+              | Duration: 
+              span ng-bind-html="item.getDurationString()"
+          .transcripts ng-show="item.highlights.audioFiles.length"
+            section ng-repeat="audioFile in item.highlights.audioFiles" ng-controller="AudioFileCtrl"
+              .transcript transcript-text="audioFile.transcript" item="item" transcript-editable="false" transcript-timestamps="start" context="result"
+          .entities
+            a.tag ng-click="searchEntity(entity, item.getTitle(),item.collectionTitle)" ng-href="/search?query=%28entity:%22{{entity}}%22%20OR%20tag:%22{{entity}}%22%29" ng-repeat="entity in item.entityShortList() track by $index" {{entity}}
+    .result-count-footer        
+      ul.pager ng-show="search.hasMoreResults() || search.page > 1"
+        li.previous ng-class="{disabled: search.page <= 1}"
+          a ng-click="search.page <= 1 || backPage()" href='#' &larr; Previous
+        li.center.text() {{search.firstItemNumber()}} to {{search.lastItemNumber()}} of {{search.totalHits}} items
+        li.next ng-class="{disabled:!search.hasMoreResults()}"
+          a ng-click="!search.hasMoreResults() || nextPage()" href='#' Next &rarr;
+    #player
+      audio

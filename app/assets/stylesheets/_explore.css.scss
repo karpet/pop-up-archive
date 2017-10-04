@@ -1,0 +1,83 @@
+.browse {
+  text-align: center;
+  li {
+    display: inline;
+    margin: 5px;
+  }
+}
+
+.expimg {
+  border-radius: 2px;
+}
+.expimg-main {
+  width: 200px;
+}
+
+.explore-main {
+  padding-top: 20px;
+  margin-right: 75px;
+  font-size: 17px;
+}
+
+.main-featured {
+  background-color: #FFFFF2;
+  border-radius: 20px;
+  h2 {
+    margin-bottom: 0px;
+  }
+  margin-top: 2em;
+}
+
+.explorep {
+  text-align: left;
+  }
+
+.top-terms {
+  height: 370px;
+}
+
+.browse_results{
+
+  #explorewell .row {
+    overflow-x: hidden;
+    text-align: center;
+    &.main-featured {
+      text-align: left;
+    }
+  }
+  h4{
+    color: #85d0f1;
+  }
+  ul {
+    margin: 0px;
+  }
+  li {
+    list-style-type: none;
+    font-family: "freight-text-pro", serif;
+  }
+  a {
+    color: #000;
+    font-family: 'soleil', helvetica, sans-serif;
+    font-weight: 600;
+  }
+  #letters {
+    padding: 10px;
+    text-align: center;
+    a {
+      font-size: 16px;
+      font-weight: bold;
+    }
+    a:active {
+      text-decoration: underline;
+    };
+    li {
+      display: inline;
+      margin: 5px;
+      text-decoration: none;
+    }
+  }
+}
+
+#explorewell {
+  width: 100%;
+}

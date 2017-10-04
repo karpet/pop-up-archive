@@ -1,0 +1,9 @@
+<div class="pua-tplayer-oembed">
+<%= render "embed_player/tplayer_player_full", :formats => [:html], :locals => { :file_id => @file_id } %>
+<%= render "embed_player/tplayer_transcript", :formats => [:html], :locals => { :file_id => @file_id } %>
+<%= render "layouts/share_modal", :locals => { :file_id => @file_id } %>
+<script src="<%= root_url %>assets/require.js" async data-pua="<%= @file_id %>" data-main="<%= root_url %>assets/tplayer-embed" type="text/javascript"></script>
+<script>
+  window.twttr=(function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],t=window.twttr||{};if(d.getElementById(id))return;js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);t._e=[];t.ready=function(f){t._e.push(f);};return t;}(document,"script","twitter-wjs"));
+ </script>
+</div>

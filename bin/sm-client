@@ -1,0 +1,88 @@
+#!/usr/bin/env ruby
+
+require 'dotenv'
+require 'pp'
+require 'speechmatics'
+require 'getoptlong'
+
+usage = <<EOF
+#{$0} [OPTION]
+
+-h, --help:
+   show help
+
+-l, --list:
+   list all jobs
+
+-j <id>, --job <id>:
+   show job details for <id>
+
+-t <id>, --transcript <id>:
+   show transcript for <id>
+
+-c <path/to/file>, --create <path/to/file>
+   upload path/to/file and create transcription job
+
+EOF
+
+Dotenv.load 'config/env_vars'
+
+Speechmatics.configure do |sm|
+  sm.auth_token = ENV["SPEECHMATICS_AUTH_TOKEN"]
+  sm.user_id    = ENV["SPEECHMATICS_USER_ID"]
+end
+
+sm = Speechmatics::Client.new({ :request => { :timeout => 120 } })
+
+opts = GetoptLong.new(
+  [ '--help', '-h', GetoptLong::NO_ARGUMENT ],
+  [ '--list', '-l', GetoptLong::NO_ARGUMENT ],
+  [ '--job',  '-j', GetoptLong::REQUIRED_ARGUMENT ],
+  [ '--transcript', '-t', GetoptLong::REQUIRED_ARGUMENT ],
+  [ '--create', '-c', GetoptLong::REQUIRED_ARGUMENT ],
+)
+
+job_id = nil
+upload_file = nil
+job_list = nil
+transcript_id = nil
+opts.each do |opt, arg|
+  case opt
+    when '--help'
+      puts usage
+      exit
+    when '--list'
+      job_list = true
+    when '--job'
+      job_id = arg.to_i
+    when '--transcript'
+      transcript_id = arg.to_i
+    when '--create'
+      upload_file = arg
+  end
+end
+
+#pp sm
+if !sm.user_id or !sm.auth_token
+  raise "Check your SPEECHMATICS_AUTH_TOKEN and SPEECHMATICS_USER_ID values in config/env_vars"
+end
+
+if job_id
+  job = sm.user.jobs(job_id).get
+  pp job.job
+elsif transcript_id
+  transcript = sm.user.jobs(transcript_id).transcript
+  pp transcript.body
+elsif job_list
+  jobs = sm.user.jobs.list.jobs
+  pp jobs
+elsif upload_file
+  info = sm.user.jobs.create(
+      data_file:    upload_file
+      #notification: 'callback',
+      #callback:     call_back_url
+      )
+  puts "Job #{info.id} created. Cost: #{info.cost} Balance: #{info.balance}"
+else
+  puts usage
+end

@@ -1,0 +1,58 @@
+#!/usr/bin/env ruby
+
+require 'dotenv'
+require 'pp'
+require 'media_monster_client'
+require 'getoptlong'
+
+usage = <<EOF
+#{$0} [OPTION]
+
+-h, --help:
+   show help
+
+-j <id>, --job <id>:
+   show job details for <id>
+
+-r <id>, --retry <id>:
+   retry job for <id>
+
+EOF
+
+Dotenv.load 'config/env_vars'
+
+MediaMonsterClient.host    = ENV['FIXER_HOST']
+MediaMonsterClient.port    = 80
+MediaMonsterClient.version = 'v1'
+MediaMonsterClient.key     = ENV['FIXER_KEY']
+MediaMonsterClient.secret  = ENV['FIXER_SECRET']
+
+opts = GetoptLong.new(
+  [ '--help',  '-h', GetoptLong::NO_ARGUMENT ],
+  [ '--job',   '-j', GetoptLong::REQUIRED_ARGUMENT ],
+  [ '--retry', '-r', GetoptLong::REQUIRED_ARGUMENT ],
+)
+
+job_id = nil
+retry_id = nil
+opts.each do |opt, arg|
+  case opt
+    when '--help'
+      puts usage
+      exit
+    when '--retry'
+      retry_id = arg.to_i
+    when '--job'
+      job_id = arg.to_i
+  end
+end
+
+if job_id
+  # TODO
+  raise "TODO"
+  # MediaMonsterClient.
+end
+
+if retry_id
+  MediaMonsterClient.retry_job(retry_id)
+end

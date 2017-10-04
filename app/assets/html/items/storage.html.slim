@@ -1,0 +1,17 @@
+section ng-controller="ItemStorageCtrl"
+  .modal-header
+    button type="button" class="close" data-dismiss="modal" aria-hidden="true" x
+    h3 Storage Settings
+  .modal-body
+    p style="position:relative;"
+      h4 ng-bind='item.title'
+      b This item is ({{durationString(item.duration)}}) long and stored at:
+      span.storage.pull-right ng-class="Storage.storageClass(item.storage)" style="display:inline; position:absolute; margin-left: 4px; margin-top: -4px;"
+    p
+      b Storage Limits:
+      div
+        span ng-bind="durationString(currentUser.usedMeteredStorage)"
+        |  / 
+        span ng-bind="durationString(currentUser.totalMeteredStorage)"
+      .progress
+        .bar ng-style="{'width': ((currentUser.usedMeteredStorage/currentUser.totalMeteredStorage) * 100) + '%'}"

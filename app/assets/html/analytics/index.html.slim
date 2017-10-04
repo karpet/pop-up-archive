@@ -1,0 +1,13 @@
+div ng-controller="AnalyticsCtrl"
+  .row
+    .col-md-3.facets
+      h2 Analytics
+      .facet
+        h5 Filter by Collection
+        ul.list-unstyled.terms
+          li ng-repeat="dataCollection in analyticsData.dataCollections"
+            .checkbox
+              input checkbox-group="" type="checkbox" name="selectedEntries[]" value="{{dataCollection}}" ng-model="dataCollection.selected" ng-click="toggleCollection(dataCollection)"
+              .label.label-info() {{dataCollection.collection.title}}
+    .col-md-9.visualization
+      bubble-chart data="analyticsData.dataForVis" collections="analyticsData.dataCollections"

@@ -1,0 +1,73 @@
+div.modal ng-controller='CollectionFormCtrl'
+  .modal-dialog
+    .modal-content
+      .modal-header
+        button type="button" class="close" data-dismiss="modal" aria-hidden="true" ng-click="$hide()" &times;
+        h3 ng-show="collection.id" Edit {{collection.title}}
+        h3 ng-hide="collection.id" Create a Collection
+      .modal-body
+        form.form-horizontal name="collectionForm"
+          .form-group
+            label.control-label
+              | Title
+            .controls
+              input name="title" type="text" ng-model="collection.title" ng-required="true" ng-class="{ 'empty-title' : collectionForm.title.$invalid }"
+          .form-group
+            label.control-label
+              | Description
+            .controls
+              textarea rows="6" ng-model="collection.description"
+          .form-group
+            label.control-label
+              | Store Media
+              i.fa.fa-question-circle style="margin-left:8px" bs-popover="itemHelp['copyMedia']" data-placement="top" html="true" auto-close="true"
+            .controls.radio-group
+              input.radio_button type="radio" name="copyMedia" ng-value="true" ng-model="collection.copyMedia" ng-change="copyMediaChange()"
+              label.radio-label
+                | Yes
+              input.radio_button type="radio" name="copyMedia" ng-value="false" ng-model="collection.copyMedia" ng-change="copyMediaChange()"
+              label.radio-label
+                | No
+          .form-group ng-hide="collection.id"
+            label.control-label
+              | Privacy
+            .controls
+              label.radio
+                input type="radio" ng-value="false" ng-model="collection.itemsVisibleByDefault" ng-change="visibilityChange()"
+                b Private:
+                |&nbsp;Collection is only visible to you.
+              label.radio
+                input type="radio" ng-value="true" ng-model="collection.itemsVisibleByDefault" ng-change="visibilityChange()"
+                b Public:
+                |&nbsp;Collection is visible to everyone.
+              label.checkbox ng-show="collection.itemsVisibleByDefault" style="position:relative;"
+                input type="checkbox" ng-true-value="InternetArchive" ng-false-value="AWS" ng-model="collection.storage"
+                |&nbsp;I'd like to store my audio at the Internet Archive.
+                .storage.storage-option.storage-internetarchive
+              .alert.alert-warn ng-show="collection.itemsVisibleByDefault"
+                | All audio stored at the Internet Archive will be available to stream and download at 
+                a href='http://archive.org' target='_blank' archive.org
+                |  and will be visible to the world.
+          .form-group
+            label.control-label
+              | Upload Images
+              i.fa.fa-question-circle style="margin-left:8px" bs-popover="itemHelp['image']" data-placement="top" html="true" auto-close="true"
+            .controls ng-show="collection.images.length > 0"
+              table.table.file-table
+                tr.file ng-repeat="image in collection.images"
+                  td.file-name alt="{{image.name}}" {{image.name}}
+                  td.file-size() {{readableFileSize(image.size)}}
+                  td.file-remove
+                    a href="#" ng-click="removeImageFile(image)" style='text-decoration: none; color: #da4f49;'
+                      i.fa.fa-remove-sign
+            .clearfix.controls.form-group
+              button.btn.btn-default file-button="setImageFiles" Choose Images
+              span &nbsp OR &nbsp
+              input.text.input#image type='text' placeholder="Insert Url" ng-model='urlForImage'
+              br
+    
+    
+    
+      .modal-footer
+        button.btn.btn-default type="button" ng-click="$hide()" Close
+        button.btn.btn-primary ng-click="submit();$hide()" ng-disabled="collectionForm.$invalid" Save

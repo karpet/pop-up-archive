@@ -1,0 +1,25 @@
+body {
+  font-size: 90%;  /* default is 72% */
+}
+
+.col-cost, .cost, .wholesale_cost, .col-wholesale, .retail, .col-retail {
+  text-align: right;
+}
+
+#main_content .attributes_table th {
+  width: 40%
+}
+
+#main_content .panel_contents .attributes_table th {
+  width: auto;
+}
+
+#active_admin_content #sidebar {
+  float: none;
+  width: auto;
+  margin-left: 0;
+}
+
+#active_admin_content #main_content_wrapper #main_content {
+  margin-right: 0;
+}

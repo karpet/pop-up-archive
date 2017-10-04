@@ -1,0 +1,378 @@
+{
+  "apiVersion": "1.0",
+  "swaggerVersion": "1.2",
+  "basePath": "XXX",
+  "resourcePath": "searches",
+  "produces": [
+    "application/json"
+  ],
+  "apis": [
+    {
+      "path": "api/search",
+      "operations": [
+        {
+          "summary": "search Pop Up Archive text fields",
+          "nickname": "api_search",
+          "notes": "Facets: Narrow the dataset that is queried.<br/>Usage in the sandbox: enter the facet in the query field. For example, news&duration:[500 TO 1000] (query all assets between 500 and 1000 seconds long for the string \"news\"<br/><table><th colspan=4>Available Facets</th><tr><td>Facet</td><td>Description</td><td>Example</td></tr><tr><td>id:</td><td>Query a faceted subset based on UID associated with an individual object</td><td>id:5789</td></tr><tr><td>collection_id:</td><td>Query a faceted subset based on UID associated with a collection</td><td>collection_id:504</td></tr><tr><td>title:</td><td>Query a faceted subset based on the title field</td><td>title:\"Snap Judgement\"</td></tr><tr><td>collection_title:</td><td>Query a faceted subset based on the collection title field</td><td>collection_title:WBUR*</td></tr><tr><td>episode_title:</td><td>Query a faceted subset based on the episode title field</td><td>episode_title:star*</td></tr><tr><td>series_title:</td><td>Query a faceted subset based on the series title field</td><td>series_title:\"Hidden Kitchens\"</td></tr><tr><td>rights:</td><td>Query a faceted subset based on the rights field</td><td>rights:green</td></tr><tr><td>tags:</td><td>Query a faceted subset based on the tags field</td><td>tags:Community</td></tr><tr><td>notes:</td><td>Query a faceted subset based on the notes field</td><td>notes:interview</td></tr><tr><td>description:</td><td>Query a faceted subset based on the description field</td><td>description:paris</td></tr><tr><td>duration:</td><td>Query a faceted subset based on the duration (in seconds) of the objects</td><td>duration:[300 TO 500]</td></tr><tr><td>date_added:</td><td>Query a faceted subset based on the date the object was added</td><td>date_added:[2013-07-09 TO *]</td></tr><tr><td>date_created:</td><td>Query a faceted subset based on the date the object was created</td><td>date_created:[2013-12-09 TO 2014-01-31]</td></tr><tr><td>date_broadcast:</td><td>Query a faceted subset based on the date the object was broadcast</td><td>date_broadcast:[2013-12-09 TO *]</td></tr><tr><td>host:</td><td>Query a faceted subset based on the host field</td><td>host:\"Christopher Lydon\"</td></tr><tr><td>producer:</td><td>Query a faceted subset based on the producer field</td><td>producer:\"The Kitchen Sisters\"</td></tr><tr><td>interviewer:</td><td>Query a faceted subset based on the interviewer field</td><td>interviewer:\"Studs Terkel\"</td></tr><tr><td>interviewee:</td><td>Query a faceted subset based on the interviewee field</td><td>interviewee:\"Simon Winchester\"</td></tr><tr><td>creator:</td><td>Query a faceted subset based on the creator field</td><td>creator:\"WILL Radio\"</td></tr><tr><td>guest:</td><td>Query a faceted subset based on the creator field</td><td>guest:*</td></tr><tr><td>contributor:</td><td>Query a faceted subset based on the contributors<br/>(includes interviewee, interviewer, host, producer fields)</td><td>contributor:\"Studs Terkel\"</td></tr></table>",
+          "method": "GET",
+          "responseClass": "List[Search]",
+          "parameters": [
+            {
+              "paramType": "query",
+              "name": "query",
+              "type": "string",
+              "description": "Query Term",
+              "required": false
+            },
+            {
+              "paramType": "query",
+              "name": "page",
+              "type": "string",
+              "description": "Page Number",
+              "required": false
+            },
+            {
+              "paramType": "query",
+              "name": "filters[collection_id]",
+              "type": "string",
+              "description": "Collection ID",
+              "required": false
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "models": {
+    "Search": {
+      "id": "Search",
+      "required": [
+        "facets",
+        "total_hits",
+        "max_score",
+        "page",
+        "query",
+        "results"
+      ],
+      "properties": {
+        "facets": {
+          "$ref": "Facets"
+        },
+        "total_hits": {
+          "type": "integer",
+          "description": "total hits"
+        },
+        "max_score": {
+          "type": "integer",
+          "description": "Max score"
+        },
+        "page": {
+          "type": "integer",
+          "description": "page number"
+        },
+        "query": {
+          "type": "string",
+          "description": "query string"
+        },
+        "results": {
+          "items": {
+            "$ref": "Results"
+          },
+          "description": "An array of query results",
+          "type": "array"
+        }
+      }
+    },
+    "Facets": {
+      "id": "Facets",
+      "required": [
+        "date_created",
+        "date_broadcast",
+        "date_added",
+        "duration",
+        "interviewer",
+        "interviewee",
+        "tag",
+        "collection_id",
+        "creator",
+        "host",
+        "producer",
+        "guest"
+      ],
+      "properties": {
+        "date_created": {
+          "description": "Date Created histogram data (See Date Histogram for more details)",
+          "$ref": "Date Histogram"
+        },
+        "date_broadcast": {
+          "description": "Date Broadcast histogram data (See Date Histogram for more details)",
+          "$ref": "Date Histogram"
+        },
+        "date_added": {
+          "description": "Date Added histogram data (See Date Histogram for more details)",
+          "$ref": "Date Histogram"
+        },
+        "duration": {
+          "description": "Duration histogram data (See Histogram for more details)",
+          "$ref": "Histogram"
+        },
+        "interviewer": {
+          "description": "Interviewer histogram data (See Terms for more details)",
+          "$ref": "Terms"
+        },
+        "interviewee": {
+          "description": "Interviewee histogram data (See Terms for more details)",
+          "$ref": "Terms"
+        },
+        "tag": {
+          "description": "Tags histogram data (See Terms for more details)",
+          "$ref": "Terms"
+        },
+        "collection_id": {
+          "description": "Collection ID histogram data (See Terms for more details)",
+          "$ref": "Terms"
+        },
+        "creator": {
+          "description": "Creator histogram data (See Terms for more details)",
+          "$ref": "Terms"
+        },
+        "host": {
+          "description": "Host histogram data (See Terms for more details)",
+          "$ref": "Terms"
+        },
+        "producer": {
+          "description": "Producer histogram data (See Terms for more details)",
+          "$ref": "Terms"
+        },
+        "guest": {
+          "description": "Guest histogram data (See Terms for more details)",
+          "$ref": "Terms"
+        }
+      }
+    },
+    "Results": {
+      "id": "Results",
+      "required": [
+        "id",
+        "collection_id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "ID for the item"
+        },
+        "title": {
+          "type": "string",
+          "description": "Title for the item"
+        },
+        "description": {
+          "type": "string",
+          "description": "description of the audio file"
+        },
+        "date_created": {
+          "type": "string",
+          "description": "Created date for the item"
+        },
+        "collection_id": {
+          "type": "integer",
+          "description": "Collection ID that the returned item belongs to"
+        },
+        "collection_title": {
+          "type": "string",
+          "description": "Collection title associated with the returned item"
+        },
+        "series_title": {
+          "type": "string",
+          "description": "Title of the associated series"
+        },
+        "date_broadcast": {
+          "type": "string",
+          "description": "Broadcast date for the item"
+        },
+        "tags": {
+          "items": {
+            "type": "string",
+            "description": "individual tag"
+          },
+          "type": "array",
+          "description": "Array of tags associated with an item"
+        },
+        "audio_files": {
+          "items": {
+            "$ref": "Audio Files"
+          },
+          "type": "array",
+          "description": "Array of audio files attributes"
+        },
+        "entities": {
+          "items": {
+            "$ref": "Entities"
+          },
+          "type": "array",
+          "description": "Array of entites related to the item"
+        }
+      }
+    },
+    "Date Histogram": {
+      "id": "Date Histogram",
+      "required": [
+        "_type",
+        "entries"
+      ],
+      "properties": {
+        "_type": {
+          "type": "string",
+          "description": "the type of histogram",
+          "enum": [
+            "date_histogram"
+          ]
+        },
+        "entries": {
+          "items": {
+            "$ref": "Date Histogram Entries"
+          },
+          "type": "array",
+          "description": "array of the histogram values"
+        }
+      }
+    },
+    "Date Histogram Entries": {
+      "id": "Date Histogram Entries",
+      "properties": {
+        "time": {
+          "type": "float",
+          "description": "Time, in seconds, that elapsed/has elapsed before and after 1970 that can be converted to date/time string"
+        },
+        "count": {
+          "type": "integer",
+          "description": "Number of items in the result set that match this facet"
+        }
+      }
+    },
+    "Histogram": {
+      "id": "Histogram",
+      "required": [
+        "_type",
+        "entries"
+      ],
+      "properties": {
+        "_type": {
+          "type": "string",
+          "description": "the type of histogram",
+          "enum": [
+            "histogram"
+          ]
+        },
+        "entries": {
+          "items": {
+            "$ref": "Histogram Entries"
+          },
+          "type": "array",
+          "description": "array of the histogram values"
+        }
+      }
+    },
+    "Histogram Entries": {
+      "id": "Histogram Entries",
+      "properties": {
+        "key": {
+          "type": "integer",
+          "description": "Duration histogram for the items in the query results"
+        },
+        "count": {
+          "type": "integer",
+          "description": "number of items that match the time specified"
+        }
+      }
+    },
+    "Terms": {
+      "id": "Terms",
+      "required": [
+        "_type",
+        "missing",
+        "total",
+        "other"
+      ],
+      "properties": {
+        "_type": {
+          "type": "string",
+          "description": "the type of histogram",
+          "enum": [
+            "terms"
+          ]
+        },
+        "missing": {
+          "type": "integer",
+          "description": "number of items that are not in the result set"
+        },
+        "total": {
+          "type": "integer",
+          "description": "number of total items that match this term"
+        },
+        "other": {
+          "type": "integer",
+          "description": "number of items that don't match"
+        },
+        "terms": {
+          "items": {
+            "$ref": "Terms Items"
+          },
+          "type": "array",
+          "description": "Term that appears within the result set"
+        }
+      }
+    },
+    "Terms Items": {
+      "id": "Terms Items",
+      "properties": {
+        "term": {
+          "type": "string",
+          "description": "Term that appears in the query result"
+        },
+        "count": {
+          "type": "integer",
+          "description": "Frequency of occurance for the associated term"
+        }
+      }
+    },
+    "Audio Files": {
+      "id": "Audio Files",
+      "required": [
+        "url",
+        "filename",
+        "id"
+      ],
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "Full URL to the audio file"
+        },
+        "filename": {
+          "type": "string",
+          "description": "Audio filename for the result item"
+        },
+        "id": {
+          "type": "integer",
+          "description": "Audio file ID"
+        }
+      }
+    },
+    "Entities": {
+      "id": "Entities",
+      "required": [
+        "name",
+        "category"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "the entity name"
+        },
+        "category": {
+          "type": "string",
+          "description": "category of the entity (e.g. tag, entity, location)"
+        }
+      }
+    }
+  }
+}

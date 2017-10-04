@@ -1,0 +1,14 @@
+# See http://www.robotstxt.org/wc/norobots.html for documentation on how to use the robots.txt file
+#
+User-Agent: *
+Disallow: /users/
+Disallow: /play/
+Disallow: /video/
+Disallow: /embed_player/ 
+Disallow: /tplayer/
+Disallow: /assets/Jplayer-2949a3eb859389ab0030617e229a2431.swf
+Disallow: /api/
+Disallow: /account/plan/prx
+Disallow: /pricing/prx
+Disallow: /embed_test.html
+Disallow: /radiorace

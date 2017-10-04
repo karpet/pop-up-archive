@@ -1,0 +1,13 @@
+WEBVTT  
+
+<%transcript.timed_texts.each_with_index do |tt, index|%>
+<% if index == 0 %>
+<%=Time.at(tt.start_time).getgm.strftime('%H:%M:%S.%3N') %> --> <%=Time.at(tt.end_time).getgm.strftime('%H:%M:%S.%3N')%>
+<% else %>
+<%=Time.at(@last_end + 0.001).getgm.strftime('%H:%M:%S.%3N') %> --> <%=Time.at(tt.end_time).getgm.strftime('%H:%M:%S.%3N') %>
+<% end %>
+<%=tt.text%>
+
+<% @last_end = tt.end_time %>
+<% end %>
+

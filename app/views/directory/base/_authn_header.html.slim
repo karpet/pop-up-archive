@@ -1,0 +1,29 @@
+.navbar.navbar-fixed-top.navbar-default ng-class="{'over-monthly-limit': currentUser.overMonthlyLimit || (currentUser.offerEnded && !currentUser.hasCard)}"
+  .container
+    .navbar-header
+      h1.site-title.authn
+        a ng-href='/' title="Pop Up Archive" rel="home"
+          .logo-square 
+            .up Up
+
+      button.navbar-toggle.collapsed type="button" data-toggle="collapse" data-target="#main-nav" aria-expanded="false"
+          span.sr-only Toggle navigation
+          span.icon-bar
+          span.icon-bar
+          span.icon-bar
+    #main-nav.navbar-collapse.collapse
+      = render('authn_nav')
+      .over-limit-msg.alert.alert-error.ng-cloak ng-show="currentUser.overMonthlyLimit"
+        | You are over your 
+        a href="/account" 
+          | monthly limit
+        | .&nbsp;
+        a ng-click="upgradeOverLimit()" href="/account/plan"
+          | Upgrade now!
+      .over-limit-msg.alert.alert-error.ng-cloak ng-show="currentUser.offerEnded && !currentUser.hasCard"
+        | Your 
+        a href="/account" 
+          | trial 
+        | has ended.&nbsp;
+        a href="/account/plan"
+          | Upgrade now!

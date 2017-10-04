@@ -1,0 +1,236 @@
+.player {
+    position: fixed;
+    bottom: 0;
+    z-index: 1000;
+    width: 100%;
+    left: 5px;
+    background-color: #FFF;
+    background: -webkit-linear-gradient(top,(rgba(255,255,255,0.7)), (rgba(255,255,255,1)));
+    background: -webkit-linear-gradient(top,(rgba(255,255,255,0.7)), (rgba(255,255,255,1)));
+    background: -moz-linear-gradient(top,(rgba(255,255,255,0.7)), (rgba(255,255,255,1)));
+    background: -ms-linear-gradient(top,(rgba(255,255,255,0.7)), (rgba(255,255,255,1)));
+    background: -o-linear-gradient(top,(rgba(255,255,255,0.7)), (rgba(255,255,255,1)));
+    &.editing {
+      bottom: 16px;
+    }
+  
+  .timecodes {
+    float: right;
+    min-width: 100px;
+    min-height: 20px;
+    padding-top: 1em;
+    text-align: right;
+  }
+  .player-button {
+    font-size: 2.5em;
+    padding-right: .4em;
+    padding-top: .2em;
+    color: #ccc;
+    float: left;
+
+    &:hover {
+      color: #5970B1;
+    }
+  }
+
+  .scrubber {
+    height: 3.5em;
+    overflow: hidden;
+    width: 100%;
+    display: block;
+    float: none;
+    width: auto;
+
+    canvas {
+      width: 100%;
+      height: 100%;
+    }
+  }
+}
+
+// TODO: remove
+#persistent-player {
+  position: fixed;
+  z-index:2000;
+  bottom: 0px;
+  right: 0;
+  color: #fff;
+  height: 70px;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  width: 100%;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  border-left: 39px solid transparent;
+  z-index: 11;
+
+  &:after {
+    content: '';
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: #2c677f;
+    opacity: 0.9;
+    z-index: 10;
+  }
+
+  & > * {
+    position: relative;
+    z-index: 11;
+  }
+
+  img {
+    width: 70px;
+    height: 70px;
+    position: absolute;
+    top: 0;
+    left: 5px;
+    background: rgba(255, 255, 255, 0.7);
+  }
+
+
+  &:before {
+    width: 31px;
+    height: 70px;
+    position: absolute;
+    left: -31px;
+    background-image: image-url('playercap.png');
+    content: '';
+  }
+
+  transition: 0.5s;
+  -o-transition: 0.5s;
+  -moz-transition: 0.5s;
+  -webkit-transition: 0.5s;
+
+  .scrubber {
+    position: absolute;
+    top: 38px;
+    left: 180px;
+    right: 150px;
+    height: 25px;
+    width: auto;
+    opacity: 1;
+    transition: opacity 0.5s;
+    -o-transition: opacity 0.5s;
+    -moz-transition: opacity 0.5s;
+    -webkit-transition: opacity 0.5s;
+    &:after {
+      display: none
+    }
+    .bar {
+      opacity: 0.9;
+      border-right: 1px solid rgb(215, 133, 81);
+      background: rgb(255, 190, 48);
+      height: 300%;
+    } 
+  }
+
+  canvas {
+    image-rendering: optimizeSpeed;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: optimize-contrast;
+  }
+
+  &.collapsed, &.hidden {
+
+    .scrubber {
+      opacity: 0;
+      transition: opacity 0.5s, visibility 0.0s 0.5s;
+      visibility: hidden;
+    }
+    width: 350px;
+    .now-playing {
+      width: 235px;
+      height: 40px;
+      font-size: 14px;
+      left: 80px;
+      overflow-x: hidden;
+    }
+    .player-controls {
+      height: 40px;
+      width: 200px;
+      left: 100px;
+      line-height: 25px;
+      top: 40px;
+      i {
+        font-size: 20px;
+      }
+    }
+  }
+
+  &.hidden {
+    width: 0;
+  }
+
+  &.collapsed.hidden {
+    width: 350px;
+    .player-controls {
+      opacity: 0;
+      -webkit-transition-duration: 0;
+    }
+    .now-playing:before {
+      -webkit-transition-duration: 0;
+      content: 'Nothing Playing';
+    }
+  }
+
+  .now-playing {
+    text-align: center;
+    position:absolute;
+    left: 180px;
+    line-height: 47px;
+    font-size: 18px;
+    font-weight: 500;
+    transition: 0.5s;
+    -o-transition: 0.5s;
+    -moz-transition: 0.5s;
+    -webkit-transition: 0.5s;
+  }
+
+  .player-controls {
+    position: absolute;
+    left: 90px;
+    width: 70px;
+    top: 0;
+    line-height: 70px;
+    text-align: center;
+    transition: 0.5s;
+    -o-transition: 0.5s;
+    -moz-transition: 0.5s;
+    -webkit-transition: 0.5s;
+    button {
+      border: none;
+      background: none;
+      color: #FFF;
+    }
+    i {
+      font-size: 40px;
+      transition: 0.5s;
+      -o-transition: 0.5s;
+      -moz-transition: 0.5s;
+      -webkit-transition: 0.5s;
+    }
+  }
+}
+
+.vertical-scrubber {
+  background: rgb(242, 239, 239);
+  position: absolute;
+  top: 15px;
+  bottom: 90px;
+  left: 10px;
+  right: 10px;
+  overflow:hidden;
+
+  .bar {
+    width: 100%;
+    margin-top: 0px;
+    background: #85D0F1;
+    opacity: 0.5;
+  }
+}

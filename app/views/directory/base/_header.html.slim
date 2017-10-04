@@ -1,0 +1,18 @@
+.navbar.navbar-fixed-top.navbar-default
+  .container.navbar-inner
+    .navbar-header
+      h1.site-title
+        a ng-href='/' title="Pop Up Archive" rel="home"
+          .logo.pop Pop
+          .logo.up Up
+          .logo.archive &nbsp;Archive
+
+      button.navbar-toggle.collapsed type="button" data-toggle="collapse" data-target="#main-nav" aria-expanded="false"
+          span.sr-only Toggle navigation
+          span.icon-bar
+          span.icon-bar
+          span.icon-bar
+
+    #main-nav.navbar-collapse.collapse
+      = render('account')
+      = render('nav')
